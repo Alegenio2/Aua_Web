@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — AUA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" href="/img/favicon-32x32.png" type="image/png" />
+</head>
+<body>
+<div class="app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+
+    <!-- Usuario -->
+    <div class="sidebar-user-top">
+      <div class="avatar-row">
+        <% if (user.image) { %>
+          <img src="<%= user.image %>" alt="Avatar" class="avatar-lg" />
+        <% } %>
+        <div style="min-width:0;flex:1">
+          <div class="user-name-lg"><%= user.name %></div>
+          <% if (usuarioInterno) { %>
+          <div class="badge-row">
+            <span class="elo-pill">ELO <%= usuarioInterno.elo %></span>
+            <% if (usuarioInterno.clan) { %><span class="clan-pill"><%= usuarioInterno.clan %></span><% } %>
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <div class="sidebar-nav">
+      <div class="nav-label">Principal</div>
+      <a href="/dashboard" class="nav-item active">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 7h2v7h4v-4h2v4h4V7h2L8 1z"/></svg>
+        Mi Dashboard
+      </a>
+      <% if (isAdmin) { %>
+      <a href="/admin" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10v4H3V2zm0 6h10v6H3V8zm1 1v4h8v-4H4z"/></svg>
+        Panel Admin
+      </a>
+      <% } %>
+      <a href="/dashboard#partidos" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2l4 4-1 1 2 2 1-1 4 4 1-1-4-4 1-1-2-2-1 1L4 1 2 2zm9 9l-1 1 2 2 2-1-1-2-2 0zM5 10l-3 3 1 2 2-1 1-3-1-1z"/></svg>
+        Mis Partidos
+        <% if (partidosPendientes.length > 0) { %><span class="nav-badge"><%= partidosPendientes.length %></span><% } %>
+      </a>
+      <a href="/dashboard#historial" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1a5 5 0 110 10A5 5 0 018 3zm-1 2v4l3 1.5-.5.9L6 9.5V5h1z"/></svg>
+        Historial
+      </a>
+
+      <div class="nav-label" style="margin-top:8px">Torneo</div>
+      <% if (slugActivo) { %>
+        <a href="/penca/<%= slugActivo %>" class="nav-item">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M3 1h10v4c0 2.76-2.24 5-5 5S3 7.76 3 5V1zm-2 1v3a3 3 0 003 3v1H3v1h10v-1H9V8a3 3 0 003-3V2H5zm6 9H7v1H5v1h6v-1H9v-1z"/></svg>
+          Pencas
+        </a>
+        <a href="/torneo/<%= slugActivo %>" class="nav-item">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h4v3H1V2zm0 9h4v3H1v-3zm6-4h4v3H7V7zm4-5h3v12h-3v-1h2V2h-2V1z"/></svg>
+          Bracket
+        </a>
+      <% } else { %>
+        <span class="nav-item" style="opacity:.4;cursor:default">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h4v3H1V2zm0 9h4v3H1v-3zm6-4h4v3H7V7zm4-5h3v12h-3v-1h2V2h-2V1z"/></svg>
+          Bracket
+        </span>
+      <% } %>
+      <a href="https://www.aoe2companion.com/statistics/leaderboard" target="_blank" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M6 2h4v12H6V2zm-5 5h4v7H1V7zm10 3h4v4h-4v-4z"/></svg>
+        Ranking
+      </a>
+    </div>
+
+    <!-- Cerrar sesión -->
+    <div class="sidebar-footer">
+      <form method="POST" action="/auth/logout" style="margin:0">
+        <button type="submit" class="signout-btn">Abandonar campo</button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+
+    <% if (flash) { %><div class="alert alert-ok"><%= flash %></div><% } %>
+    <% if (error) { %><div class="alert alert-err"><%= error %></div><% } %>
+
+    <!-- Sin cuenta vinculada -->
+    <% if (!usuarioInterno) { %>
+    <div class="reclutamiento">
+      <h2>Reclutamiento</h2>
+      <p>Tu espada aún no ha sido registrada en nuestros anales.<br>Vincula tu perfil de AoE2 Companion para unirte.</p>
+      <div class="vincular-form">
+        <div>
+          <label>Link de AoE2 Companion</label>
+          <input id="vincular-url" type="text" class="vincular-input" placeholder="https://aoe2companion.com/player/12345/nombre" />
+          <div class="vincular-hint" style="margin-top:6px">Entra a aoe2companion.com, busca tu perfil y copia la URL.</div>
+        </div>
+        <div id="vincular-feedback" class="vincular-feedback"></div>
+        <button onclick="vincularPerfil()" class="btn-submit">Vincular perfil</button>
+      </div>
+    </div>
+
+    <% } else { %>
+
+    <!-- Cabecera -->
+    <div class="page-header">
+      <div>
+        <div class="page-title"><%= usuarioInterno.nombre %></div>
+        <div class="page-sub" style="color:var(--celeste)">
+          <% if (partidosPendientes.length > 0) { %>
+            <%= partidosPendientes.length %> batalla<%= partidosPendientes.length > 1 ? 's' : '' %> pendiente<%= partidosPendientes.length > 1 ? 's' : '' %>
+          <% } else { %>
+            Sin batallas pendientes · Descansa, guerrero
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-label">ELO</div>
+        <div class="stat-value highlight"><%= usuarioInterno.elo %></div>
+        <% if (usuarioInterno.elomax) { %><div class="stat-sub">Máx. <%= usuarioInterno.elomax %></div><% } %>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Victorias</div>
+        <div class="stat-value"><%= usuarioInterno.wins %></div>
+        <% if (winrate !== null) { %><div class="stat-sub"><%= winrate %>% winrate</div><% } %>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Derrotas</div>
+        <div class="stat-value"><%= usuarioInterno.losses %></div>
+        <div class="stat-sub">
+          W/L: <%= usuarioInterno.losses > 0 ? (usuarioInterno.wins / usuarioInterno.losses).toFixed(1) : '—' %>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">País</div>
+        <div class="stat-value" style="font-size:14px;margin-top:4px"><%= usuarioInterno.pais %></div>
+        <div class="stat-sub"><%= usuarioInterno.clan ? 'Clan: ' + usuarioInterno.clan : 'Sin clan' %></div>
+      </div>
+    </div>
+
+    <!-- Content grid -->
+    <div class="dash-grid">
+
+      <!-- Columna izquierda: partidos -->
+      <div id="partidos">
+        <div class="section-label">Próximas batallas</div>
+
+        <% if (partidosPendientes.length === 0) { %>
+        <div class="empty-dash">No tienes duelos pendientes — descansa, guerrero.</div>
+        <% } else { %>
+        <% partidosPendientes.forEach(p => { %>
+        <div class="match-card">
+          <div class="match-card-header">
+            <div>
+              <div class="match-phase"><%= p.fase %></div>
+              <% if (p.coordinado) { %>
+              <div class="match-schedule">
+                <i class="fas fa-clock" style="color:var(--gold);margin-right:3px"></i>
+                <%= new Date(p.coordinado).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit'}) %>
+                <%= new Date(p.coordinado).toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'}) %>
+              </div>
+              <% } %>
+            </div>
+            <div class="match-round"><%= p.grupo_nombre || 'Ronda ' + p.ronda %></div>
+          </div>
+
+          <div class="match-body">
+            <div class="player-name"><%= p.j1_nombre %></div>
+            <div class="vs-badge">VS</div>
+            <div class="player-name right"><%= p.j2_nombre %></div>
+          </div>
+
+          <div class="match-actions">
+            <div class="match-action" style="padding:0;border-right:0.5px solid var(--brown2)">
+              <form class="coordinar-form coordinar-wrap" data-id="<%= p.id %>">
+                <input type="datetime-local" name="fecha_hora"
+                  value="<%= p.coordinado ? p.coordinado.replace(' ','T').substring(0,16) : '' %>" />
+                <button type="submit">Agendar</button>
+              </form>
+            </div>
+            <a href="/dashboard/partido/<%= p.id %>" class="match-action primary">
+              <i class="fas fa-flag-checkered"></i>
+              <%= p.estado === 'finalizado' ? 'Editar' : 'Reportar' %>
+            </a>
+          </div>
+        </div>
+        <% }) %>
+        <% } %>
+
+        <!-- Historial -->
+        <% if (partidosFinalizados.length > 0) { %>
+        <div id="historial" style="margin-top:28px">
+          <div class="section-label">Últimos resultados</div>
+          <div class="panel">
+            <% partidosFinalizados.forEach((p, idx) => {
+              const ganoYo = (p.j1_id === user.id && p.score1 > p.score2) || (p.j2_id === user.id && p.score2 > p.score1);
+              const rival = p.j1_id === user.id ? p.j2_nombre : p.j1_nombre;
+            %>
+            <div class="history-item">
+              <div>
+                <div class="history-players">vs <%= rival %></div>
+                <div class="history-phase"><%= p.fase %></div>
+              </div>
+              <div class="<%= ganoYo ? 'score-win' : 'score-loss' %>">
+                <%= p.score1 %> – <%= p.score2 %>
+              </div>
+              <div class="history-links">
+                <% if (p.rec_link) { %>
+                  <a href="<%= p.rec_link %>" download class="history-link"><i class="fas fa-download"></i> REC</a>
+                <% } %>
+                <a href="/dashboard/partido/<%= p.id %>" class="history-link">Editar</a>
+              </div>
+            </div>
+            <% }) %>
+          </div>
+        </div>
+        <% } %>
+      </div>
+
+      <!-- Columna derecha -->
+      <div>
+        <!-- Torneos activos -->
+        <% if (torneosActivos.length > 0) { %>
+        <div class="section-label">Torneos activos</div>
+        <% torneosActivos.forEach(t => { %>
+        <div class="panel" style="margin-bottom:14px">
+          <div class="panel-header">
+            <span class="panel-title"><%= t.nombre %></span>
+            <span class="estado-badge estado-<%= t.estado === 'inscripcion' ? 'inscripcion' : 'jugando' %>">
+              <%= t.estado === 'inscripcion' ? 'INSCRIPCIONES' : 'EN CURSO' %>
+            </span>
+          </div>
+          <div style="padding:14px 16px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:10px;letter-spacing:0.5px">
+              <%= t.tipo %> · <%= t.formato.replace(/_/g,' ') %>
+            </div>
+            <% if (t.estado === 'inscripcion') { %>
+              <% if (inscripciones[t.id]) { %>
+                <div class="inscrito-msg"><i class="fas fa-check" style="margin-right:6px"></i>Inscrito</div>
+              <% } else { %>
+                <button class="btn-inscribir" data-torneo="<%= t.id %>" data-fb="fb-<%= t.id %>">
+                  <i class="fas fa-plus"></i> Inscribirse
+                </button>
+                <div id="fb-<%= t.id %>" class="vincular-feedback" style="margin-top:8px"></div>
+              <% } %>
+            <% } else { %>
+              <div style="font-size:11px;color:var(--celeste);text-align:center">Torneo en curso</div>
+            <% } %>
+            <a href="/penca/<%= t.slug %>" class="btn-action" style="margin-top:10px; display:inline-flex; align-items:center; justify-content:center;">
+              <i class="fas fa-futbol" style="margin-right:6px"></i>Apostar en la penca
+            </a>
+          </div>
+        </div>
+        <% }) %>
+        <% } %>
+
+        <!-- Perfil AOE2 -->
+        <div class="section-label" style="margin-top:<%= torneoActivo ? '8px' : '0' %>">Perfil AOE2</div>
+        <div class="panel">
+          <% [
+            ['Nombre', usuarioInterno.nombre],
+            ['ELO', usuarioInterno.elo],
+            ['Rank', usuarioInterno.rank ? '#' + usuarioInterno.rank : '—'],
+            ['País', usuarioInterno.pais],
+            ['Clan', usuarioInterno.clan || '—'],
+          ].forEach(([label, val]) => { %>
+          <div class="profile-row">
+            <span class="profile-label"><%= label %></span>
+            <span class="profile-value"><%= val %></span>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+
+    </div><!-- /dash-grid -->
+    <% } %><!-- /usuarioInterno -->
+
+  </main>
+</div><!-- /app -->
+
+<script>
+/* ── VINCULAR PERFIL ── */
+async function vincularPerfil() {
+  const url = document.getElementById('vincular-url')?.value?.trim();
+  const fb = document.getElementById('vincular-feedback');
+  if (!url) { showFeedback(fb, 'Ingresa el link de tu perfil.', false); return; }
+  try {
+    const r = await fetch('/api/usuarios/vincular', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const d = await r.json();
+    if (d.success) { showFeedback(fb, '¡Perfil vinculado! Recargando...', true); setTimeout(() => location.reload(), 1200); }
+    else showFeedback(fb, d.error || 'Error al vincular.', false);
+  } catch { showFeedback(fb, 'Error de conexión.', false); }
+}
+
+/* ── COORDINAR ── */
+document.querySelectorAll('.coordinar-form').forEach(form => {
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const partidoId = form.dataset.id;
+    const fecha_hora = form.querySelector('[name=fecha_hora]').value;
+    if (!fecha_hora) return;
+    try {
+      const r = await fetch('/api/partidos/coordinar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partidoId, fecha_hora })
+      });
+      const d = await r.json();
+      if (d.success) location.reload();
+      else alert(d.error || 'Error al coordinar.');
+    } catch { alert('Error de conexión.'); }
+  });
+});
+
+/* ── INSCRIBIR ── */
+document.querySelectorAll('.btn-inscribir').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const torneoId = btn.dataset.torneo;
+    const fb = document.getElementById(btn.dataset.fb);
+    btn.disabled = true;
+    try {
+      const r = await fetch('/api/torneos/inscribir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ torneoId })
+      });
+      const d = await r.json();
+      if (d.success) { showFeedback(fb, '¡Inscripto! Recargando...', true); setTimeout(() => location.reload(), 1000); }
+      else { showFeedback(fb, d.error || 'Error al inscribirse.', false); btn.disabled = false; }
+    } catch { showFeedback(fb, 'Error de conexión.', false); btn.disabled = false; }
+  });
+});
+
+function showFeedback(el, msg, ok) {
+  el.textContent = msg;
+  el.className = 'vincular-feedback ' + (ok ? 'ok' : 'err');
+}
+</script>
+</body>
+</html>

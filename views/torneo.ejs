@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= torneo.nombre %> — AUA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .torneo-hero { padding: 40px 24px 24px; }
+    .torneo-title { font-family:'Cinzel Decorative',serif; font-size:clamp(32px,4vw,52px); color:var(--gold); margin-bottom:10px; }
+    .torneo-meta { font-size:13px; color:var(--muted); margin-bottom:22px; }
+    .torneo-meta strong { color:var(--text); }
+    .torneo-actions { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:32px; }
+    .torneo-actions a { display:inline-flex; align-items:center; justify-content:center; padding:10px 16px; border-radius:8px; background:var(--gold); color:var(--bg0); text-decoration:none; font-weight:700; }
+    .panel { background:var(--bg2); border:0.5px solid var(--brown); border-radius:14px; padding:22px; margin-bottom:22px; }
+    .panel h3 { font-family:'Cinzel',serif; color:var(--gold); margin-bottom:12px; font-size:16px; }
+    .panel p { color:var(--muted); margin:8px 0; line-height:1.65; }
+    .group-table { width:100%; border-collapse:collapse; margin-top:10px; }
+    .group-table th, .group-table td { padding:10px 12px; border-bottom:0.5px solid rgba(58,42,26,0.4); font-size:13px; }
+    .group-table th { color:var(--dim); text-transform:uppercase; letter-spacing:1px; font-size:11px; }
+    .match-row { display:flex; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:0.5px solid rgba(58,42,26,0.3); }
+    .match-row:last-child { border-bottom:none; }
+    .match-label { color:var(--text); font-size:13px; }
+    .empty-msg { background:var(--bg2); border:0.5px solid var(--brown); border-radius:12px; padding:24px; color:var(--muted); text-align:center; }
+  </style>
+</head>
+<body>
+<header>
+  <a class="header-logo" href="/">
+    <span class="logo-icon">⚔</span>
+    <span class="logo-text">AUA</span>
+  </a>
+  <nav>
+    <a href="/eventos">Eventos</a>
+    <a href="/torneos">Salón de la Fama</a>
+    <a href="/copa_stats">📊 Stats</a>
+  </nav>
+  <div class="header-actions">
+    <% if (user) { %>
+      <a href="/dashboard" class="nav-user" title="Ir al dashboard">
+        <% if (user.image) { %><img src="<%= user.image %>" alt="Avatar" class="nav-avatar" /><% } %>
+        <span><%= user.name %></span>
+      </a>
+      <form method="POST" action="/auth/logout" style="display:inline;margin:0">
+        <button type="submit" class="nav-logout-btn" title="Cerrar sesión">✕</button>
+      </form>
+    <% } else { %>
+      <a href="/auth/discord" class="nav-discord-btn"><i class="fab fa-discord"></i>Ingresar</a>
+    <% } %>
+  </div>
+</header>
+
+<main class="torneo-hero">
+  <div class="torneo-title"><%= torneo.nombre %></div>
+  <div class="torneo-meta">
+    Estado: <strong><%= torneo.estado === 'inscripcion' ? 'Inscripción' : torneo.estado === 'jugando' ? 'En curso' : torneo.estado %></strong>
+    · Formato: <strong><%= torneo.formato.replace(/_/g, ' ') %></strong>
+    · Tipo: <strong><%= torneo.tipo %></strong>
+    · Inscripciones: <strong><%= inscriptos %></strong>
+  </div>
+  <div class="torneo-actions">
+    <a href="/penca/<%= torneo.slug %>">Ir a la penca</a>
+    <a href="/dashboard">Mi Dashboard</a>
+  </div>
+</main>
+
+<section class="panel">
+  <h3>Información del torneo</h3>
+  <p><strong>ELO permitido:</strong> <%= torneo.elo_min %> – <%= torneo.elo_max %></p>
+  <% if (torneo.redondeo_elo > 0) { %><p><strong>Redondeo de ELO:</strong> cada <%= torneo.redondeo_elo %> puntos</p><% } %>
+  <% if (torneo.cantidad_grupos) { %>
+    <p><strong>Grupos:</strong> <%= torneo.cantidad_grupos %> · <strong>Clasificados por grupo:</strong> <%= torneo.clasificados_por_grupo %></p>
+  <% } %>
+</section>
+
+<% if (grupos && grupos.length > 0) { %>
+<section class="panel">
+  <h3>Fase de grupos</h3>
+  <% grupos.forEach(grupo => { %>
+    <div style="margin-bottom:22px">
+      <h4 style="font-family:'Cinzel',serif;color:var(--gold);font-size:14px;margin-bottom:12px">Grupo <%= grupo.nombre %></h4>
+      <% if (grupo.participantes && grupo.participantes.length > 0) { %>
+      <table class="group-table">
+        <thead><tr><th>Participante</th><th>ELO</th></tr></thead>
+        <tbody>
+          <% grupo.participantes.forEach(p => { %>
+            <tr>
+              <td><%= p.usuario_id ? p.usuario_nombre : p.nombre %></td>
+              <td><%= p.elo %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } %>
+      <% if (grupo.partidos && grupo.partidos.length > 0) { %>
+        <div style="margin-top:12px">
+          <% grupo.partidos.forEach(match => { %>
+            <div class="match-row">
+              <div class="match-label">Ronda <%= match.ronda %></div>
+              <div class="match-label"><%= match.j1_nombre || match.jugador1_id %> vs <%= match.j2_nombre || match.jugador2_id %></div>
+              <div class="match-label"><%= match.estado === 'finalizado' ? match.score1 + '–' + match.score2 : 'Pendiente' %></div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  <% }) %>
+</section>
+<% } %>
+
+<% if (Object.keys(eliminatorias).length > 0) { %>
+<section class="panel">
+  <h3>Eliminatorias</h3>
+  <% Object.entries(eliminatorias).forEach(([fase, matches]) => { %>
+    <div style="margin-bottom:20px">
+      <h4 style="font-family:'Cinzel',serif;color:var(--gold);font-size:14px;margin-bottom:10px;text-transform:capitalize"><%= fase %></h4>
+      <% matches.forEach(match => { %>
+        <div class="match-row">
+          <div class="match-label">Ronda <%= match.ronda %></div>
+          <div class="match-label"><%= match.j1_nombre || match.jugador1_id %> vs <%= match.j2_nombre || match.jugador2_id %></div>
+          <div class="match-label"><%= match.estado === 'finalizado' ? match.score1 + '–' + match.score2 : 'Pendiente' %></div>
+        </div>
+      <% }) %>
+    </div>
+  <% }) %>
+</section>
+<% } %>
+
+<% if ((!grupos || grupos.length === 0) && Object.keys(eliminatorias).length === 0) { %>
+<section class="empty-msg">No hay datos de grupos o eliminatorias cargados aún para este torneo.</section>
+<% } %>
+
+<footer style="padding:32px 24px;text-align:center;color:var(--dim);">
+  <div class="footer-logo">AUA</div>
+  <div class="footer-text">Asociación Uruguaya de Age of Empires II</div>
+</footer>
+</body>
+</html>

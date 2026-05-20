@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control de Partidos — AUA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" href="/img/favicon-32x32.png" type="image/png" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚔</div>
+      <div class="brand-text">Centro de<br>Mando</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-label">Admin</div>
+      <a href="/admin" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L2 3v5c0 3.5 2.5 6.5 6 7.5C14 14.5 14 11 14 8V3L8 1z"/></svg>
+        Panel General
+      </a>
+      <a href="/admin/partidos" class="nav-item active">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M3 1h10v4c0 2.76-2.24 5-5 5S3 7.76 3 5V1zm-2 1v3a3 3 0 003 3v1H3v1h10v-1H9V8a3 3 0 003-3V2H5zm6 9H7v1H5v1h6v-1H9v-1z"/></svg>
+        Control de Partidos
+      </a>
+      <div class="nav-label" style="margin-top:8px">Navegación</div>
+      <a href="/dashboard" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 7h2v7h4v-4h2v4h4V7h2L8 1z"/></svg>
+        Mi Dashboard
+      </a>
+    </div>
+    <div class="sidebar-user">
+      <img src="<%= user.image %>" alt="Avatar" class="user-avatar" />
+      <span class="user-name"><%= user.name %></span>
+      <a href="/auth/logout" style="color:#884444" title="Cerrar sesión">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M6 2H2v12h4v-1H3V3h3V2zm5 3l-1 1 2 2H5v1h7l-2 2 1 1 4-4-4-3z"/></svg>
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <% if (!torneoActivo) { %>
+    <div class="empty-msg">No hay un torneo en estado "jugando" actualmente.</div>
+    <% } else { %>
+
+    <div class="page-title">Control de Partidos: <%= torneoActivo.nombre %></div>
+
+    <% if (flash) { %><div class="alert alert-ok"><%= flash %></div><% } %>
+    <% if (error) { %><div class="alert alert-err"><%= error %></div><% } %>
+
+    <% if (partidos.length === 0) { %>
+    <div class="empty-msg" style="padding:40px 0;font-family:'Inter';font-size:13px;color:var(--dim)">
+      No hay partidos pendientes en este torneo.
+    </div>
+    <% } else { %>
+    <% partidos.forEach(p => { %>
+    <div class="partido-card">
+      <form method="POST" action="/api/partidos/penca" class="partido-form">
+        <input type="hidden" name="partidoId" value="<%= p.id %>" />
+
+        <div class="partido-info">
+          <strong><%= p.j1 %> vs <%= p.j2 %></strong>
+          <div class="round">Ronda <%= p.ronda %></div>
+        </div>
+
+        <div class="score-group">
+          <input type="number" name="score1" placeholder="0" min="0" class="score-input" />
+          <span class="score-sep">–</span>
+          <input type="number" name="score2" placeholder="0" min="0" class="score-input" />
+        </div>
+
+        <div class="check-group">
+          <input type="checkbox" name="cuenta_penca" value="1" id="cp-<%= p.id %>" checked />
+          <label for="cp-<%= p.id %>">Contabilizar en la penca</label>
+        </div>
+
+        <button type="submit" class="btn-save">Guardar resultado</button>
+      </form>
+
+      <form method="POST" action="/api/partidos/walkover" style="margin-top:8px;display:flex;gap:8px;align-items:center;border-top:0.5px solid var(--brown);padding-top:8px">
+        <input type="hidden" name="partidoId" value="<%= p.id %>" />
+        <select name="ganadorId" style="flex:1;padding:6px 10px;background:var(--bg3);border:0.5px solid var(--brown);border-radius:6px;color:var(--text);font-size:12px">
+          <option value="<%= p.jugador1_id %>">WO → <%= p.j1 %></option>
+          <option value="<%= p.jugador2_id %>">WO → <%= p.j2 %></option>
+        </select>
+        <button type="submit" class="btn-save" style="background:#5a2020;border-color:#8a3030;white-space:nowrap" onclick="return confirm('¿Registrar walkover?')">WO</button>
+      </form>
+    </div>
+    <% }) %>
+    <% } %>
+    <% } %>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salón de la Fama | AUA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" href="/img/favicon-32x32.png" type="image/png" />
+  <style>
+    .salon-hero {
+      text-align: center;
+      padding: 60px 24px 36px;
+      position: relative;
+    }
+    .salon-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% 0%, rgba(232,200,122,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .salon-hero-img {
+      height: 90px;
+      margin-bottom: 14px;
+      filter: drop-shadow(0 0 12px rgba(232,200,122,0.2));
+    }
+    .salon-hero-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(22px, 5vw, 42px);
+      color: var(--gold);
+      letter-spacing: 3px;
+      margin: 0 0 6px;
+      text-shadow: 0 0 20px rgba(232,200,122,0.25);
+    }
+    .salon-hero-sub {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      color: var(--celeste);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+    .salon-quicknav {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+    .salon-quicknav a {
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      text-decoration: none;
+      font-size: 11px;
+      border: 0.5px solid rgba(232,200,122,0.3);
+      padding: 6px 16px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+    .salon-quicknav a:hover { background: rgba(232,200,122,0.08); border-color: var(--gold); }
+
+    .salon-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+      position: relative;
+      z-index: 1;
+    }
+    .salon-season {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      color: var(--gold);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin: 48px 0 18px;
+      padding-left: 14px;
+      border-left: 3px solid var(--celeste);
+    }
+    .salon-card {
+      background: var(--bg2);
+      border: 0.5px solid var(--brown);
+      border-radius: 10px;
+      padding: 22px 24px;
+      margin-bottom: 18px;
+    }
+    .salon-card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      color: var(--celeste);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 0 0 16px;
+      padding-bottom: 10px;
+      border-bottom: 0.5px solid var(--brown);
+    }
+    .salon-card-title + .salon-card-title { margin-top: 28px; }
+    .salon-table { width: 100%; border-collapse: collapse; margin: 0; }
+    .salon-table th {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--dim);
+      text-transform: uppercase;
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 0.5px solid var(--brown);
+    }
+    .salon-table td {
+      padding: 11px 12px;
+      font-size: 13px;
+      color: var(--muted);
+      border-bottom: 0.5px solid rgba(58,42,26,0.4);
+    }
+    .salon-table tr:last-child td { border-bottom: none; }
+    .salon-champion {
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .salon-pending {
+      font-size: 13px;
+      color: var(--dim);
+      font-style: italic;
+      line-height: 1.7;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="header-logo" href="/">
+    <span class="logo-icon">⚔</span>
+    <span class="logo-text">AUA</span>
+  </a>
+  <nav>
+    <a href="/">Inicio</a>
+    <a href="/eventos">Eventos</a>
+    <a class="active" href="/torneos">Salón de la Fama</a>
+    <a class="nav-stats" href="/copa_stats">📊 Stats</a>
+  </nav>
+  <div class="header-actions">
+    <% if (user) { %>
+      <a href="/dashboard" class="nav-user" title="Ir al dashboard">
+        <% if (user.image) { %><img src="<%= user.image %>" alt="avatar" class="nav-avatar" /><% } %>
+        <span><%= user.name %></span>
+      </a>
+      <form method="POST" action="/auth/logout" style="display:inline;margin:0">
+        <button type="submit" class="nav-logout-btn" title="Cerrar sesión">✕</button>
+      </form>
+    <% } else { %>
+      <a href="/auth/discord" class="nav-discord-btn"><i class="fab fa-discord"></i>Ingresar</a>
+    <% } %>
+  </div>
+</header>
+
+<div class="salon-hero fade-up">
+  <img src="/img/aua.png" alt="Logo AUA" class="salon-hero-img" />
+  <div class="salon-hero-title">Salón de la Fama</div>
+  <div class="salon-hero-sub">Campeones Históricos AUA</div>
+  <div class="salon-quicknav">
+    <a href="#2026">Temporada 2026</a>
+    <a href="#2025">Temporada 2025</a>
+  </div>
+</div>
+
+<div class="salon-wrap">
+
+  <section id="2026">
+    <div class="salon-season">Temporada 2026</div>
+    <div class="salon-card">
+      <div class="salon-card-title">En Desarrollo</div>
+      <p class="salon-pending">Las crónicas de este año aún se están escribiendo. Los nombres de los nuevos campeones aparecerán aquí tras las grandes finales.</p>
+    </div>
+  </section>
+
+  <section id="2025">
+    <div class="salon-season">Temporada 2025</div>
+    <div class="salon-card">
+      <div class="salon-card-title">🏆 Campeonato Uruguayo</div>
+      <table class="salon-table">
+        <thead><tr><th>Categoría</th><th>Campeón Supremo</th></tr></thead>
+        <tbody>
+          <tr><td>Categoría B</td><td class="salon-champion">Rxon</td></tr>
+          <tr><td>Categoría C</td><td class="salon-champion">Buyan</td></tr>
+          <tr><td>Categoría D</td><td class="salon-champion">Matix</td></tr>
+          <tr><td>Categoría E</td><td class="salon-champion">Tascon</td></tr>
+        </tbody>
+      </table>
+
+      <div class="salon-card-title" style="margin-top:28px">⚔️ Uruguay Open Cup 2v2</div>
+      <table class="salon-table">
+        <thead><tr><th>Torneo</th><th>Ganadores</th></tr></thead>
+        <tbody>
+          <tr><td>Copa 2v2</td><td class="salon-champion">Tasconeta</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="footer-logo">AUA</div>
+  <div class="footer-text">Asociación Uruguaya de Age of Empires II</div>
+  <div class="footer-links">
+    <a href="https://www.twitch.tv/jabsuy" target="_blank" title="Twitch"><i class="fab fa-twitch"></i></a>
+    <a href="https://www.youtube.com/@jabsuy" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
+    <a href="https://www.instagram.com/fumage_" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+    <a href="https://discord.gg/3xeSRaQxDE" target="_blank" title="Discord"><i class="fab fa-discord"></i></a>
+  </div>
+</footer>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AUA - Asociación Uruguaya de Age of Empires II</title>
+    <meta name="description" content="Comunidad oficial de AOE II en Uruguay. Torneos, noticias y livestreams.">
+
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" href="img/favicon-32x32.png" type="image/png" />
+</head>
+<body>
+
+<header>
+    <a class="header-logo" href="/">
+        <span class="logo-icon">⚔</span>
+        <span class="logo-text">AUA</span>
+    </a>
+    <nav>
+        <a class="active" href="/">Inicio</a>
+        <a href="/eventos">Eventos</a>
+        <a href="/torneos">Salón de la Fama</a>
+        <a class="nav-stats" href="/copa_stats">📊 Stats</a>
+    </nav>
+    <div class="header-actions">
+        <% if (user) { %>
+            <a href="/dashboard" class="nav-user" title="Ir al dashboard">
+                <% if (user.image) { %>
+                    <img src="<%= user.image %>" alt="avatar" class="nav-avatar" />
+                <% } %>
+                <span><%= user.name %></span>
+            </a>
+            <form method="POST" action="/auth/logout" style="display:inline;margin:0">
+                <button type="submit" class="nav-logout-btn" title="Cerrar sesión">✕</button>
+            </form>
+        <% } else { %>
+            <a href="/auth/discord" class="nav-discord-btn" title="Ingresar con Discord">
+                <i class="fab fa-discord"></i>Ingresar
+            </a>
+        <% } %>
+    </div>
+</header>
+
+<div class="hero fade-up">
+    <div class="hero-label">Asociación Uruguaya de Age of Empires II</div>
+    <h1 class="hero-title">Comunidad <span>Uruguaya</span> de AOE II</h1>
+    <div class="hero-sub">Torneos · Noticias · Livestreams</div>
+    <div class="hero-divider"><div class="hero-diamond"></div></div>
+    <div class="hero-pills">
+        <div class="pill"><i class="fas fa-trophy"></i> Torneos semanales</div>
+        <div class="pill"><i class="fas fa-newspaper"></i> Noticias actualizadas</div>
+        <div class="pill"><i class="fas fa-tv"></i> Livestreams en vivo</div>
+    </div>
+</div>
+
+<main class="section">
+    <section class="grid-main hero-layout">
+        <div class="swiper">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide" style="background-image: url('img/campeonatouruguayo.webp')">
+                    <div class="slide-overlay">
+                        <h2>Campeonato Uruguayo</h2>
+                    </div>
+                </div>
+                <div class="swiper-slide" style="background-image: url('img/uruguay_open_cup.webp')">
+                    <div class="slide-overlay">
+                        <h2>Uruguay Open Cup</h2>
+                    </div>
+                </div>
+                <div class="swiper-slide" style="background-image: url('img/copauruguay.webp')">
+                    <div class="slide-overlay">
+                        <h2>Copa Uruguaya</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <aside class="sidebar-info">
+            <div class="info-box">
+                <div class="box-header"><i>🎯</i> Próximos eventos</div>
+                <div class="box-content">
+                    <% if (activeTournaments && activeTournaments.length > 0) { %>
+                        <div style="display:flex;flex-direction:column;gap:14px;">
+                            <% activeTournaments.forEach(t => { %>
+                                <div style="padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+                                    <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px;"><%= t.nombre %></div>
+                                    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">
+                                        <%= t.tipo %> · <%= t.formato.replace(/_/g, ' ') %> · <strong><%= t.estado === 'inscripcion' ? 'Inscripción' : 'En curso' %></strong>
+                                    </div>
+                                    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                                        <% if (t.estado === 'inscripcion') { %>
+                                            <a href="/dashboard" class="btn" style="padding:8px 12px;font-size:13px;">
+                                                <i class="fas fa-user-plus" style="margin-right:6px"></i>Inscribirse
+                                            </a>
+                                        <% } else { %>
+                                            <a href="/torneo/<%= t.slug %>" class="btn" style="padding:8px 12px;font-size:13px;">
+                                                <i class="fas fa-arrow-right" style="margin-right:6px"></i>Ver torneo
+                                            </a>
+                                        <% } %>
+                                        <span style="font-size:11px;color:var(--dim);"> <%= t.inscriptos %> inscriptos</span>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } else { %>
+                        <p style="color:var(--dim);font-size:13px;">No hay torneos activos en este momento.</p>
+                    <% } %>
+                </div>
+            </div>
+            <div class="info-box torneo-info">
+                <div class="box-header"><i>🕒</i> Partidas en vivo</div>
+                <div class="box-content" id="proximas-partidas">
+                    <% if (upcomingMatches && upcomingMatches.length > 0) { %>
+                        <div style="display:flex;flex-direction:column;gap:14px;">
+                            <% upcomingMatches.forEach(match => { %>
+                                <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+                                    <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px;"><%= match.torneo_nombre %></div>
+                                    <div style="font-size:14px;margin-bottom:4px;"><%= match.j1_nombre %> <strong>vs</strong> <%= match.j2_nombre %></div>
+                                    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;"><%= match.displayDateTime %></div>
+                                    <a href="/torneo/<%= match.torneo_slug %>" class="btn" style="padding:8px 12px;font-size:13px;">
+                                        <i class="fas fa-arrow-right" style="margin-right:6px"></i>Ver duelo
+                                    </a>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } else { %>
+                        <p class="empty-msg">No hay partidas coordinadas por ahora.</p>
+                    <% } %>
+                </div>
+            </div>
+        </aside>
+    </section>
+
+    <section class="grid-main main-section">
+        <div class="noticias">
+            <div class="section-header">
+                <div class="section-icon">📰</div>
+                <div>
+                    <div class="section-title">Noticias de Age</div>
+                    <div class="section-sub">Actualizado automaticamente</div>
+                </div>
+                <div class="section-line"></div>
+            </div>
+            <div class="card">
+                <div id="feed-news" class="box-content">
+                    <p class="loading"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="streams">
+            <div class="section-header">
+                <div class="section-icon">📺</div>
+                <div>
+                    <div class="section-title">Livestreams</div>
+                    <div class="section-sub">Canales de la comunidad</div>
+                </div>
+                <div class="section-line"></div>
+            </div>
+            <div class="card">
+                <div class="twitch-carousel">
+                    <div class="carousel-track" id="twitch-carousel-track">
+                        <p class="loading" style="padding:16px"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="organizacion">
+        <div class="section-header">
+            <div class="section-icon">🏆</div>
+            <div>
+                <div class="section-title">Organizan</div>
+                <div class="section-sub">Equipos detras de los torneos</div>
+            </div>
+            <div class="section-line"></div>
+        </div>
+        <div class="organizadores-grid">
+            <div class="organizador">
+                <img src="img/fumage.png" alt="Fumage" />
+                <p>Clan Fumage</p>
+            </div>
+            <div class="organizador">
+                <img src="img/jabs2.png" alt="JabsUY" />
+                <p>JabsUY</p>
+            </div>
+            <div class="organizador">
+                <img src="img/aua.png" alt="AUA" />
+                <p>Asociación Uruguaya de AOE II</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="sponsors">
+        <div class="section-header">
+            <div class="section-icon">🤝</div>
+            <div>
+                <div class="section-title">Sponsors</div>
+                <div class="section-sub">Empresas que hacen posible los torneos</div>
+            </div>
+            <div class="section-line"></div>
+        </div>
+        <div class="contenedor-sponsors">
+            <div class="sponsor">
+                <img src="img/sponsors/abstract.png" alt="Abstract Gaming" />
+                <p>Abstract Gaming</p>
+                <a href="https://www.instagram.com/abstractlatam/" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
+            </div>
+            <div class="sponsor">
+                <img src="img/sponsors/banifox.png" alt="Banifox Uruguay" />
+                <p>Banifox Uruguay</p>
+                <a href="https://www.instagram.com/banifox.uruguay/" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
+            </div>
+            <div class="sponsor">
+                <img src="img/sponsors/jbl.png" alt="JBL Uruguay" />
+                <p>JBL Uruguay</p>
+                <a href="https://www.instagram.com/jbluruguayoficial/" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
+            </div>
+            <div class="sponsor">
+                <img src="img/sponsors/sharkoon.png" alt="Sharkoon LATAM" />
+                <p>Sharkoon LATAM</p>
+                <a href="https://www.instagram.com/sharkoonlatam/" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
+            </div>
+            <div class="sponsor">
+                <img src="img/sponsors/netac.jpg" alt="Netac" />
+                <p>Netac</p>
+                <a href="https://www.instagram.com/netac_official/" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
+            </div>
+            <div class="sponsor">
+                <img src="img/sponsors/estampame_esta.png" alt="EstampameEsta" />
+                <p>Estampame Esta</p>
+                <a href="https://www.instagram.com/estampameestauy" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <div class="footer-logo">AUA</div>
+    <div class="footer-text">Asociación Uruguaya de Age of Empires II</div>
+    <div class="footer-links">
+        <a href="https://www.twitch.tv/jabsuy" target="_blank" title="Twitch"><i class="fab fa-twitch"></i></a>
+        <a href="https://www.youtube.com/@jabsuy" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
+        <a href="https://www.instagram.com/fumage_" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="https://discord.gg/3xeSRaQxDE" target="_blank" title="Discord"><i class="fab fa-discord"></i></a>
+    </div>
+</footer>
+
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script src="js/main.js"></script>
+<script src="js/noticias.js"></script>
+<script src="js/torneosGlobales.js"></script>
+<script src="js/torneoInternacional.js"></script>
+<script src="js/livestreams.js"></script>
+</body>
+</html>

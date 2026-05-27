@@ -1,7 +1,9 @@
 const express = require('express');
 const Database = require('better-sqlite3');
 const path = require('path');
+const { EmbedBuilder } = require('discord.js');
 const { procesarGeneracionTorneo, generarBracketDirecto } = require('../../utils/generadorTorneo');
+const { obtenerEloActual } = require('../../lib/aoe2');
 
 const router = express.Router();
 
@@ -65,6 +67,21 @@ router.post('/crear', requireAdmin, (req, res) => {
       INSERT INTO torneos (id, nombre, slug, tipo, formato, elo_min, elo_max, redondeo_elo, estado, creado_en, cantidad_grupos, clasificados_por_grupo)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'inscripcion', datetime('now'), ?, ?)
     `).run(id, nombre.trim(), slug, tipo, formato, eloMin, eloMax, redondeoElo, cantGrupos, clasificadosGrupo);
+
+    const chTorneos = process.env.DISCORD_TORNEOS_CHANNEL;
+    if (chTorneos && req.app.locals.notifyDiscord) {
+      const embed = new EmbedBuilder()
+        .setTitle('🏆 ¡Nuevo torneo abierto!')
+        .setColor('#c8a840')
+        .setDescription(`**${nombre.trim()}** ya está disponible para inscripción.`)
+        .addFields(
+          { name: 'Tipo', value: tipo, inline: true },
+          { name: 'Formato', value: formato.replace(/_/g, ' '), inline: true },
+          { name: 'ELO', value: `${eloMin} – ${eloMax}`, inline: true }
+        )
+        .setTimestamp();
+      req.app.locals.notifyDiscord(chTorneos, { embeds: [embed] });
+    }
 
     res.redirect('/admin?msg=' + encodeURIComponent('Torneo creado correctamente.'));
   } catch (e) {
@@ -142,18 +159,29 @@ router.post('/generar', requireAdmin, async (req, res) => {
 });
 
 // POST /api/torneos/inscribir
-router.post('/inscribir', requireAuth, (req, res) => {
+router.post('/inscribir', requireAuth, async (req, res) => {
   const db = getDB();
   try {
     const { torneoId, equipo_id } = req.body;
     const discordId = req.user.id;
 
-    const usuario = db.prepare('SELECT elo FROM usuarios WHERE discordId = ?').get(discordId);
+    const usuario = db.prepare('SELECT elo, nombre, profileId FROM usuarios WHERE discordId = ?').get(discordId);
     const torneo = db.prepare('SELECT * FROM torneos WHERE id = ?').get(torneoId);
 
     if (!usuario) return res.json({ success: false, error: 'Debes vincular tu perfil AoE2 primero.' });
     if (!torneo) return res.json({ success: false, error: 'Torneo no encontrado.' });
     if (torneo.estado !== 'inscripcion') return res.json({ success: false, error: 'El torneo no está en fase de inscripción.' });
+
+    // Actualizar ELO desde aoe2companion antes de inscribir
+    if (usuario.profileId) {
+      const fresco = await obtenerEloActual(usuario.profileId).catch(() => null);
+      if (fresco && !fresco.error) {
+        db.prepare(`
+          UPDATE usuarios SET elo = ?, rank = ?, wins = ?, losses = ?, ultimapartida = ? WHERE discordId = ?
+        `).run(fresco.elo, fresco.rank, fresco.wins, fresco.losses, fresco.ultimapartida, discordId);
+        usuario.elo = fresco.elo;
+      }
+    }
 
     const eloUsuario = usuario.elo || 0;
     if (eloUsuario < torneo.elo_min || eloUsuario > torneo.elo_max) {
@@ -167,6 +195,25 @@ router.post('/inscribir', requireAuth, (req, res) => {
 
     db.prepare('INSERT INTO inscripciones (torneo_id, usuario_id, elo_inscripcion, equipo_id) VALUES (?, ?, ?, ?)')
       .run(torneoId, discordId, eloInscripcion, equipo_id || null);
+
+    const channelId = process.env.DISCORD_INSCRIPCIONES_CHANNEL || '1473060055396913192';
+    if (channelId && req.app.locals.notifyDiscord) {
+      const nombreAoe = usuario.nombre || 'Desconocido';
+      const nombreDiscord = req.user.global_name || req.user.username || req.user.displayName || discordId;
+      const embed = new EmbedBuilder()
+        .setTitle('🎮 Nuevo jugador inscripto')
+        .setColor('#22c55e')
+        .setDescription(`**${nombreAoe}** se inscribió en **${torneo.nombre}**.`)
+        .addFields(
+          { name: 'Torneo', value: torneo.nombre, inline: true },
+          { name: 'ELO inscripción', value: `${eloInscripcion}`, inline: true },
+          { name: 'Nombre AoE2', value: nombreAoe, inline: true },
+          { name: 'Discord', value: `${nombreDiscord} (<@${discordId}>)`, inline: false }
+        )
+        .setTimestamp();
+
+      req.app.locals.notifyDiscord(channelId, { embeds: [embed] });
+    }
 
     res.json({ success: true });
   } catch (e) {

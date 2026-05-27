@@ -27,7 +27,12 @@ router.post('/vincular', requireAuth, async (req, res) => {
     }
 
     const datosAoE = await obtenerEloActual(profileId);
-    if (!datosAoE) return res.json({ success: false, error: 'No se encontró el perfil en la API.' });
+    if (!datosAoE || datosAoE.error) {
+      const mensaje = datosAoE?.error === 'no_1v1_rank'
+        ? 'No se encontraron partidas rankeadas 1v1 para este perfil.'
+        : 'No se encontró el perfil en la API.';
+      return res.json({ success: false, error: mensaje });
+    }
 
     db.prepare(`
       INSERT OR REPLACE INTO usuarios (discordId, profileId, nombre, elo, rank, wins, losses, pais, country, clan, elomax, ultimapartida, data)

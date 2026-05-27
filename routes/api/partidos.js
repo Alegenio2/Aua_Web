@@ -3,6 +3,7 @@ const multer = require('multer');
 const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
+const { EmbedBuilder } = require('discord.js');
 const { buscarEstadisticasEncuentro } = require('../../utils/aoe2stats');
 const { actualizarPuntosPenca } = require('../../lib/penca');
 
@@ -42,10 +43,13 @@ router.post('/resultado', requireAuth, upload.single('rec_file'), async (req, re
     }
 
     const partido = db.prepare(`
-      SELECT p.*, u1.profileId as id1, u2.profileId as id2
+      SELECT p.*, u1.profileId as id1, u2.profileId as id2,
+             u1.nombre as j1_nombre, u2.nombre as j2_nombre,
+             t.nombre as torneo_nombre
       FROM partidos p
       JOIN usuarios u1 ON p.jugador1_id = u1.discordId
       JOIN usuarios u2 ON p.jugador2_id = u2.discordId
+      LEFT JOIN torneos t ON p.torneo_id = t.id
       WHERE p.id = ?
     `).get(partidoId);
 
@@ -84,6 +88,21 @@ router.post('/resultado', requireAuth, upload.single('rec_file'), async (req, re
     }
 
     actualizarPuntosPenca(partidoId, score1, score2);
+
+    const chResult = process.env.DISCORD_RESULTADOS_CHANNEL;
+    if (chResult && req.app.locals.notifyDiscord) {
+      const ganadorNombre = score1 > score2 ? partido.j1_nombre : partido.j2_nombre;
+      const embed = new EmbedBuilder()
+        .setTitle('Resultado cargado')
+        .setColor('#f59e0b')
+        .setDescription(`**${partido.j1_nombre}** ${score1} – ${score2} **${partido.j2_nombre}**`)
+        .addFields(
+          { name: 'Torneo', value: partido.torneo_nombre || '—', inline: true },
+          { name: 'Ganador', value: ganadorNombre, inline: true }
+        )
+        .setTimestamp();
+      req.app.locals.notifyDiscord(chResult, { embeds: [embed] });
+    }
 
     res.json({ success: true, message: 'Resultado guardado correctamente.' });
   } catch (e) {

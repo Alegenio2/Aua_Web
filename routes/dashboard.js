@@ -13,7 +13,7 @@ function refrescarEloAsync(discordId, profileId, ultimapartida) {
   if (ahora - ultimaActualizacion < REFRESH_INTERVAL_MS) return;
 
   obtenerEloActual(profileId).then(datos => {
-    if (!datos) return;
+    if (!datos || datos.error) return;
     const db = new Database(path.resolve(process.cwd(), 'botfmg.db'));
     try {
       db.prepare(`

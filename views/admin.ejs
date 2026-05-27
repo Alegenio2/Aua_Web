@@ -40,6 +40,10 @@
         Gestión
         <% if (torneos.length > 0) { %><span class="nav-badge"><%= torneos.length %></span><% } %>
       </a>
+      <a href="/admin/usuarios" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5 7a3 3 0 110-6 3 3 0 010 6zm0 1c-2.67 0-5 1.34-5 3v1h10v-1c0-1.66-2.33-3-5-3zm8-1a2 2 0 110-4 2 2 0 010 4zm2 5h-4v-1c0-.88-.47-1.67-1.18-2.18C11.06 9.28 11.5 9 12 9c2 0 3 1 3 2v1z"/></svg>
+        Jugadores
+      </a>
       <a href="/admin/partidos" class="nav-item">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2l4 4-1 1 2 2 1-1 4 4 1-1-4-4 1-1-2-2-1 1L4 1 2 2zm9 9l-1 1 2 2 2-1-1-2-2 0zM5 10l-3 3 1 2 2-1 1-3-1-1z"/></svg>
         Control Partidos
@@ -87,92 +91,96 @@
       <!-- COLUMNA IZQUIERDA -->
       <div>
 
-        <!-- GENERAR TORNEO -->
-        <% if (torneoJugando) { %>
+        <!-- GENERAR TORNEO — itera sobre todos los torneos en curso -->
+        <% if (torneosJugandoData.length > 0) { %>
         <div id="generar" style="margin-bottom:24px">
-          <div class="section-label">Generación de torneo</div>
-          <div class="panel" style="border-color:<%= partidosGenerados === 0 ? 'rgba(232,200,122,0.4)' : 'var(--brown)' %>">
+          <div class="section-label">Generación de torneos</div>
+          <% torneosJugandoData.forEach(tj => {
+               const fmtLabel = tj.formato === 'liga' ? 'Liga'
+                 : tj.formato === 'eliminacion_directa' ? 'Elim. directa'
+                 : tj.formato === 'grupos_eliminatoria' ? 'Grupos + Elim.'
+                 : tj.formato === 'doble_eliminacion'   ? 'Doble Elim.'
+                 : 'Desconocido';
+          %>
+          <div class="panel" style="margin-bottom:14px;border-color:<%= tj.partidosGenerados === 0 ? 'rgba(232,200,122,0.4)' : 'var(--brown)' %>">
             <div class="panel-header">
-              <span class="panel-title"><%= torneoJugando.nombre %></span>
-              <span class="estado-badge <%= partidosGenerados > 0 ? 'estado-jugando' : 'estado-inscripcion' %>">
-                <%= partidosGenerados > 0 ? 'GENERADO' : 'PENDIENTE' %>
+              <span class="panel-title"><%= tj.nombre %></span>
+              <span class="estado-badge <%= tj.partidosGenerados > 0 ? 'estado-jugando' : 'estado-inscripcion' %>">
+                <%= tj.partidosGenerados > 0 ? 'GENERADO' : 'PENDIENTE' %>
               </span>
             </div>
             <div style="padding:20px">
-              <% let formatoLabel = 'Desconocido';
-                 if (torneoJugando.formato === 'liga') formatoLabel = 'Liga';
-                 else if (torneoJugando.formato === 'eliminacion_directa') formatoLabel = 'Elim. directa';
-                 else if (torneoJugando.formato === 'grupos_eliminatoria') formatoLabel = 'Grupos + Elim.';
-                 else if (torneoJugando.formato === 'doble_eliminacion') formatoLabel = 'Doble Elim.';
-              %>
               <div class="gen-stats">
                 <div class="gen-stat">
                   <div class="gen-stat-label">Formato</div>
-                  <div class="gen-stat-value" style="font-size:13px">
-                    <%= formatoLabel %>
-                  </div>
+                  <div class="gen-stat-value" style="font-size:13px"><%= fmtLabel %></div>
                 </div>
                 <div class="gen-stat">
                   <div class="gen-stat-label">Inscriptos</div>
-                  <div class="gen-stat-value"><%= inscriptosJugando %></div>
+                  <div class="gen-stat-value"><%= tj.inscriptosJugando %></div>
                 </div>
                 <div class="gen-stat">
-                  <div class="gen-stat-label"><%= partidosGenerados > 0 ? 'Partidos' : 'Grupos' %></div>
-                  <div class="gen-stat-value"><%= partidosGenerados > 0 ? partidosGenerados : (torneoJugando.cantidad_grupos || '—') %></div>
+                  <div class="gen-stat-label"><%= tj.partidosGenerados > 0 ? 'Partidos' : 'Grupos' %></div>
+                  <div class="gen-stat-value"><%= tj.partidosGenerados > 0 ? tj.partidosGenerados : (tj.cantidad_grupos || '—') %></div>
                 </div>
               </div>
 
-              <% if (partidosGenerados > 0) { %>
+              <% if (tj.partidosGenerados > 0) { %>
               <div class="gen-ok">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 8l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
-                Torneo generado — <% if (gruposGenerados > 0) { %><%= gruposGenerados %> grupos y <% } %><%= partidosGenerados %> partidos creados.
+                Torneo generado — <% if (tj.gruposGenerados > 0) { %><%= tj.gruposGenerados %> grupos y <% } %><%= tj.partidosGenerados %> partidos creados.
                 <a href="/admin/partidos" style="margin-left:auto;font-size:11px;color:var(--gold);border:0.5px solid rgba(232,200,122,0.3);padding:4px 10px;border-radius:5px">Ver partidos</a>
               </div>
-              <% if (torneoJugando.formato === 'grupos_eliminatoria' && playoffsGenerados === 0) { %>
+              <% if (tj.formato === 'grupos_eliminatoria' && tj.playoffsGenerados === 0) { %>
               <form method="POST" action="/api/torneos/generar-playoffs" style="margin-top:12px">
-                <input type="hidden" name="torneoId" value="<%= torneoJugando.id %>" />
+                <input type="hidden" name="torneoId" value="<%= tj.id %>" />
                 <button type="submit" class="btn-generar" style="background:linear-gradient(135deg,#3a5820,#2a4010)">
                   Generar Playoffs desde Grupos
                 </button>
               </form>
-              <% } else if (torneoJugando.formato === 'grupos_eliminatoria' && playoffsGenerados > 0) { %>
+              <% } else if (tj.formato === 'grupos_eliminatoria' && tj.playoffsGenerados > 0) { %>
               <div class="gen-ok" style="margin-top:8px;border-color:#3a5820">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 8l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
-                Playoffs generados — <%= playoffsGenerados %> partidos de eliminatoria.
+                Playoffs generados — <%= tj.playoffsGenerados %> partidos de eliminatoria.
               </div>
               <% } %>
               <% } else { %>
               <div class="gen-info">
-                <% if (torneoJugando.formato === 'eliminacion_directa') { %>
-                  Se creará un bracket de eliminación directa con <%= inscriptosJugando %> participantes ordenados por ELO. Si el número no es potencia de 2, los mejor rankeados reciben BYE.
+                <% if (tj.formato === 'eliminacion_directa') { %>
+                  Se creará un bracket de eliminación directa con <%= tj.inscriptosJugando %> participantes ordenados por ELO.
                 <% } else { %>
-                  Se dividirán <%= inscriptosJugando %> jugadores en <%= torneoJugando.cantidad_grupos %> grupos usando Snake Draft (por ELO). Cada grupo jugará todos contra todos.
+                  Se dividirán <%= tj.inscriptosJugando %> jugadores en <%= tj.cantidad_grupos %> grupos usando Snake Draft (por ELO). Cada grupo jugará todos contra todos.
                 <% } %>
               </div>
               <form method="POST" action="/api/torneos/generar">
-                <input type="hidden" name="torneoId" value="<%= torneoJugando.id %>" />
-                <button type="submit" class="btn-generar" <%= inscriptosJugando < 2 ? 'disabled' : '' %>>
-                  <%= inscriptosJugando < 2 ? 'Faltan inscriptos' : 'Generar torneo' %>
+                <input type="hidden" name="torneoId" value="<%= tj.id %>" />
+                <button type="submit" class="btn-generar" <%= tj.inscriptosJugando < 2 ? 'disabled' : '' %>>
+                  <%= tj.inscriptosJugando < 2 ? 'Faltan inscriptos' : 'Generar torneo' %>
                 </button>
               </form>
               <% } %>
             </div>
           </div>
+          <% }) %>
         </div>
         <% } %>
 
-        <!-- ESTADO DEL TORNEO -->
-        <% if (torneoJugando && (estadoPartidos.sinCoordar.length + estadoPartidos.sinReportar.length + estadoPartidos.pendientes.length) > 0) { %>
-        <div id="estado" style="margin-bottom:24px">
-          <div class="section-label">Estado del torneo</div>
+        <!-- ESTADO DEL TORNEO — itera sobre todos los torneos en curso -->
+        <% torneosJugandoData.forEach(tj => {
+             const ep = tj.estadoPartidos;
+             const totalPendientes = ep.sinCoordar.length + ep.sinReportar.length + ep.pendientes.length;
+             if (totalPendientes === 0) return;
+        %>
+        <div id="estado-<%= tj.id %>" style="margin-bottom:24px">
+          <div class="section-label">Estado — <%= tj.nombre %></div>
 
-          <% if (estadoPartidos.sinReportar.length > 0) { %>
+          <% if (ep.sinReportar.length > 0) { %>
           <div class="panel" style="margin-bottom:14px;border-color:#7a3020">
             <div class="panel-header">
-              <span class="panel-title" style="color:#c87060">Sin reportar (<%= estadoPartidos.sinReportar.length %>)</span>
+              <span class="panel-title" style="color:#c87060">Sin reportar (<%= ep.sinReportar.length %>)</span>
               <span style="font-size:11px;color:var(--dim)">Fecha pasada — esperando resultado</span>
             </div>
-            <% estadoPartidos.sinReportar.forEach(p => { %>
+            <% ep.sinReportar.forEach(p => { %>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:0.5px solid rgba(58,42,26,0.3)">
               <div>
                 <a href="/jugador/<%= p.j1_id %>" style="color:var(--text);text-decoration:none"><%= p.j1 %></a>
@@ -186,13 +194,13 @@
           </div>
           <% } %>
 
-          <% if (estadoPartidos.sinCoordar.length > 0) { %>
+          <% if (ep.sinCoordar.length > 0) { %>
           <div class="panel" style="margin-bottom:14px;border-color:#6a5010">
             <div class="panel-header">
-              <span class="panel-title" style="color:var(--gold)">Sin coordinar (<%= estadoPartidos.sinCoordar.length %>)</span>
+              <span class="panel-title" style="color:var(--gold)">Sin coordinar (<%= ep.sinCoordar.length %>)</span>
               <span style="font-size:11px;color:var(--dim)">Aún no acordaron fecha</span>
             </div>
-            <% estadoPartidos.sinCoordar.forEach(p => { %>
+            <% ep.sinCoordar.forEach(p => { %>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:0.5px solid rgba(58,42,26,0.3)">
               <div>
                 <a href="/jugador/<%= p.j1_id %>" style="color:var(--text);text-decoration:none"><%= p.j1 %></a>
@@ -206,13 +214,13 @@
           </div>
           <% } %>
 
-          <% if (estadoPartidos.pendientes.length > 0) { %>
+          <% if (ep.pendientes.length > 0) { %>
           <div class="panel" style="margin-bottom:14px">
             <div class="panel-header">
-              <span class="panel-title">Coordinados (<%= estadoPartidos.pendientes.length %>)</span>
+              <span class="panel-title">Coordinados (<%= ep.pendientes.length %>)</span>
               <span style="font-size:11px;color:var(--win)">Fecha futura acordada</span>
             </div>
-            <% estadoPartidos.pendientes.forEach(p => { %>
+            <% ep.pendientes.forEach(p => { %>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:0.5px solid rgba(58,42,26,0.3)">
               <div>
                 <a href="/jugador/<%= p.j1_id %>" style="color:var(--text);text-decoration:none"><%= p.j1 %></a>
@@ -227,7 +235,7 @@
           <% } %>
 
         </div>
-        <% } %>
+        <% }) %>
 
         <!-- INSCRIPTOS -->
         <% if (torneosConInscriptos.length > 0) { %>
@@ -260,11 +268,14 @@
                   <% if (torneo.tipo !== '1v1') { %><td style="font-family:monospace;font-size:11px;color:var(--dim)"><%= j.equipo_id %></td><% } %>
                   <% if (torneo.estado === 'inscripcion') { %>
                   <td>
-                    <form method="POST" action="/api/torneos/desinscribir" style="margin:0">
-                      <input type="hidden" name="torneoId" value="<%= torneo.id %>" />
-                      <input type="hidden" name="userId" value="<%= j.usuario_id %>" />
-                      <button type="submit" class="btn-action btn-danger" style="padding:3px 8px;font-size:11px" onclick="return confirm('¿Remover a <%= j.nombre %> del torneo?')">×</button>
-                    </form>
+                    <div style="display:flex;gap:4px;justify-content:flex-end">
+                      <button class="btn-action" style="padding:3px 8px;font-size:11px" onclick="abrirEditarElo('<%= torneo.id %>', '<%= j.usuario_id %>', '<%= j.nombre %>', <%= j.elo_inscripcion %>)">✎</button>
+                      <form method="POST" action="/api/torneos/desinscribir" style="margin:0;display:inline">
+                        <input type="hidden" name="torneoId" value="<%= torneo.id %>" />
+                        <input type="hidden" name="userId" value="<%= j.usuario_id %>" />
+                        <button type="submit" class="btn-action btn-danger" style="padding:3px 8px;font-size:11px" onclick="return confirm('¿Remover a <%= j.nombre %> del torneo?')">×</button>
+                      </form>
+                    </div>
                   </td>
                   <% } %>
                 </tr>
@@ -407,6 +418,33 @@
   }
   document.getElementById('formatoSelect').addEventListener('change', toggleGrupos);
   toggleGrupos();
+
+  function abrirEditarElo(torneoId, userId, nombre, eloActual) {
+    const nuevoElo = prompt(`Editar ELO de ${nombre}\n\nELO actual: ${eloActual}\n\nIngresa el nuevo ELO:`, eloActual);
+    
+    if (nuevoElo !== null) {
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/admin/editar-elo';
+      
+      const campos = [
+        { name: 'torneoId', value: torneoId },
+        { name: 'userId', value: userId },
+        { name: 'nuevoElo', value: nuevoElo }
+      ];
+      
+      campos.forEach(campo => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = campo.name;
+        input.value = campo.value;
+        form.appendChild(input);
+      });
+      
+      document.body.appendChild(form);
+      form.submit();
+    }
+  }
 </script>
 </body>
 </html>

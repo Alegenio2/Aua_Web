@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jugadores Vinculados — AUA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" href="/img/favicon-32x32.png" type="image/png" />
+  <style>
+    .usuarios-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+    .search-box { background:#1a1208; border:1px solid #3a2a1a; border-radius:8px; padding:8px 14px; color:#e0d0b0; font-size:13px; width:260px; outline:none; }
+    .search-box:focus { border-color:#c8a840; }
+    .usuarios-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .usuarios-table th { text-align:left; padding:10px 14px; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#806040; border-bottom:1px solid #2a1a0a; font-weight:600; }
+    .usuarios-table td { padding:10px 14px; border-bottom:1px solid #1a1208; vertical-align:middle; }
+    .usuarios-table tr:hover td { background:rgba(232,200,122,0.03); }
+    .nick { font-weight:600; color:#e8e0d0; }
+    .elo-badge { display:inline-block; padding:2px 10px; border-radius:12px; font-weight:700; font-size:12px; background:rgba(200,168,64,0.12); color:#c8a840; border:1px solid rgba(200,168,64,0.25); }
+    .elo-badge.alto { background:rgba(168,200,96,0.12); color:#a8c860; border-color:rgba(168,200,96,0.25); }
+    .elo-badge.bajo { background:rgba(200,100,80,0.12); color:#c86450; border-color:rgba(200,100,80,0.2); }
+    .pais { font-size:16px; }
+    .discord-id { font-family:monospace; font-size:11px; color:#554433; }
+    .btn-xs { padding:4px 10px; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer; border:1px solid; transition:all .15s; font-family:'Inter',sans-serif; }
+    .btn-refresh { background:transparent; border-color:#3a2a1a; color:#806040; }
+    .btn-refresh:hover { border-color:#c8a840; color:#c8a840; }
+    .record { font-size:11px; color:#554433; }
+    .record .w { color:#6a9040; }
+    .record .l { color:#904040; }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100; align-items:center; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#1a1208; border:1px solid #3a2a1a; border-radius:12px; padding:28px; width:100%; max-width:480px; }
+    .modal h3 { font-family:'Cinzel',serif; color:#c8a840; font-size:16px; margin-bottom:18px; }
+    .form-group { margin-bottom:14px; }
+    .form-group label { display:block; font-size:11px; color:#806040; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+    .form-group input { width:100%; background:#0d0a04; border:1px solid #3a2a1a; border-radius:7px; padding:9px 12px; color:#e0d0b0; font-size:13px; outline:none; }
+    .form-group input:focus { border-color:#c8a840; }
+    .form-hint { font-size:11px; color:#554433; margin-top:4px; }
+    .modal-actions { display:flex; gap:10px; margin-top:20px; }
+    .btn-primary { flex:1; background:#c8a840; color:#0a0804; border:none; padding:10px; border-radius:7px; font-family:'Cinzel',serif; font-weight:700; font-size:13px; cursor:pointer; }
+    .btn-primary:hover { background:#e8c860; }
+    .btn-cancel { background:transparent; border:1px solid #3a2a1a; color:#806040; padding:10px 18px; border-radius:7px; font-size:13px; cursor:pointer; }
+    .btn-cancel:hover { border-color:#806040; }
+    .count-badge { font-size:12px; color:#806040; background:#1a1208; padding:4px 10px; border-radius:8px; border:1px solid #2a1a0a; }
+    .empty-state { text-align:center; padding:40px 20px; color:#3a2a1a; font-size:13px; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚔</div>
+      <div class="brand-text">Centro de<br>Mando</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-label">Admin</div>
+      <a href="/admin" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L2 3v5c0 3.5 2.5 6.5 6 7.5C14 14.5 14 11 14 8V3L8 1z"/></svg>
+        Panel General
+      </a>
+      <a href="/admin/usuarios" class="nav-item active">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5 7a3 3 0 110-6 3 3 0 010 6zm0 1c-2.67 0-5 1.34-5 3v1h10v-1c0-1.66-2.33-3-5-3zm8-1a2 2 0 110-4 2 2 0 010 4zm2 5h-4v-1c0-.88-.47-1.67-1.18-2.18C11.06 9.28 11.5 9 12 9c2 0 3 1 3 2v1z"/></svg>
+        Jugadores
+        <span class="nav-badge"><%= usuarios.length %></span>
+      </a>
+      <a href="/admin/partidos" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M3 1h10v4c0 2.76-2.24 5-5 5S3 7.76 3 5V1zm-2 1v3a3 3 0 003 3v1H3v1h10v-1H9V8a3 3 0 003-3V2H5zm6 9H7v1H5v1h6v-1H9v-1z"/></svg>
+        Control Partidos
+      </a>
+      <a href="/admin/penca" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M3 1h10v4c0 2.76-2.24 5-5 5S3 7.76 3 5V1zm-2 1v3a3 3 0 003 3v1H3v1h10v-1H9V8a3 3 0 003-3V2H5zm6 9H7v1H5v1h6v-1H9v-1z"/></svg>
+        Control Penca
+      </a>
+      <div class="nav-label" style="margin-top:8px">Navegación</div>
+      <a href="/dashboard" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 7h2v7h4v-4h2v4h4V7h2L8 1z"/></svg>
+        Mi Dashboard
+      </a>
+    </div>
+    <div class="sidebar-user">
+      <img src="<%= user.image %>" alt="Avatar" class="user-avatar" />
+      <span class="user-name"><%= user.name %></span>
+      <a href="/auth/logout" style="color:#884444" title="Cerrar sesión">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M6 2H2v12h4v-1H3V3h3V2zm5 3l-1 1 2 2H5v1h7l-2 2 1 1 4-4-4-3z"/></svg>
+      </a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="content-header">
+      <h1 class="page-title">Jugadores Vinculados</h1>
+    </div>
+
+    <% if (flash) { %>
+      <div class="alert alert-success"><%= flash %></div>
+    <% } %>
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <div class="card">
+      <div class="usuarios-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="count-badge"><%= usuarios.length %> jugadores</span>
+          <input type="text" class="search-box" id="searchInput" placeholder="Buscar por nick o Discord ID..." oninput="filtrar()" />
+        </div>
+        <button class="btn btn-primary" onclick="document.getElementById('modalAgregar').classList.add('open')">
+          + Agregar jugador
+        </button>
+      </div>
+
+      <% if (usuarios.length === 0) { %>
+        <div class="empty-state">No hay jugadores vinculados todavía.</div>
+      <% } else { %>
+      <div style="overflow-x:auto">
+        <table class="usuarios-table" id="tablaUsuarios">
+          <thead>
+            <tr>
+              <th>Jugador</th>
+              <th>ELO</th>
+              <th>Rank</th>
+              <th>Record</th>
+              <th>Profile ID</th>
+              <th>Discord ID</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% usuarios.forEach(u => {
+              const eloClass = u.elo >= 1600 ? 'alto' : u.elo >= 1000 ? '' : 'bajo';
+            %>
+            <tr data-nick="<%= (u.nombre || '').toLowerCase() %>" data-discord="<%= (u.discordId || '').toLowerCase() %>">
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <% if (u.pais) { %><span class="pais"><%= u.pais %></span><% } %>
+                  <div>
+                    <div class="nick"><%= u.nombre || '—' %></div>
+                    <% if (u.clan) { %><div style="font-size:11px;color:#554433">[<%= u.clan %>]</div><% } %>
+                  </div>
+                </div>
+              </td>
+              <td><span class="elo-badge <%= eloClass %>"><%= u.elo || 0 %></span></td>
+              <td style="color:#806040;font-size:12px">#<%= u.rank || '—' %></td>
+              <td class="record">
+                <span class="w"><%= u.wins || 0 %>G</span> / <span class="l"><%= u.losses || 0 %>D</span>
+              </td>
+              <td><a href="https://aoe2companion.com/profile/<%= u.profileId %>" target="_blank" style="color:#554433;font-family:monospace;font-size:11px"><%= u.profileId || '—' %></a></td>
+              <td class="discord-id"><%= u.discordId %></td>
+              <td>
+                <form method="POST" action="/admin/usuarios/actualizar-elo" style="display:inline">
+                  <input type="hidden" name="discordId" value="<%= u.discordId %>" />
+                  <button type="submit" class="btn-xs btn-refresh" title="Actualizar ELO desde AoE2 Companion">↻ ELO</button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+    </div>
+  </main>
+</div>
+
+<!-- Modal agregar jugador -->
+<div class="modal-overlay" id="modalAgregar">
+  <div class="modal">
+    <h3>Agregar jugador manualmente</h3>
+    <form method="POST" action="/admin/usuarios/agregar">
+      <div class="form-group">
+        <label>Discord ID</label>
+        <input type="text" name="discordId" placeholder="ej: 382688182002515978" required />
+        <div class="form-hint">ID numérico de Discord del jugador</div>
+      </div>
+      <div class="form-group">
+        <label>Perfil AoE2 Companion</label>
+        <input type="text" name="profileUrl" placeholder="ej: https://aoe2companion.com/profile/123456" required />
+        <div class="form-hint">Pegá la URL completa del perfil o solo el ID numérico</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="document.getElementById('modalAgregar').classList.remove('open')">Cancelar</button>
+        <button type="submit" class="btn-primary">Agregar jugador</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function filtrar() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#tablaUsuarios tbody tr').forEach(tr => {
+    const nick = tr.dataset.nick || '';
+    const discord = tr.dataset.discord || '';
+    tr.style.display = (!q || nick.includes(q) || discord.includes(q)) ? '' : 'none';
+  });
+}
+
+document.getElementById('modalAgregar').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+</script>
+</body>
+</html>

@@ -45,13 +45,18 @@ function concatenateFiles(files, jsDir) {
   return content;
 }
 
-function minifyJS(code) {
-  return code
-    .replace(/\/\*[\s\S]*?\*\//g, '') // Remove block comments
-    .replace(/\/\/.*$/gm, '') // Remove line comments
-    .replace(/\s+/g, ' ') // Collapse whitespace
-    .replace(/\s*([{}();,:])\s*/g, '$1') // Remove space around special chars
-    .trim();
+async function minifyJS(code) {
+  const { minify } = await import('terser');
+  try {
+    const result = await minify(code, {
+      compress: true,
+      mangle: false,
+    });
+    return result.code || code;
+  } catch (e) {
+    console.warn('Terser error, returning unminified:', e.message);
+    return code;
+  }
 }
 
 async function buildBundles() {
@@ -73,7 +78,7 @@ async function buildBundles() {
       let combined = concatenateFiles(existingFiles, jsDir);
 
       // Minify
-      let minified = minifyJS(combined);
+      let minified = await minifyJS(combined);
 
       // Write bundle
       fs.writeFileSync(bundle.outfile, minified, 'utf8');

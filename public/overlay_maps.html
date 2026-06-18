@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #F5B800; --gold-light: #FFD84D; --gold-dark: #C48A00;
+            --celeste: #5BB8D4; --celeste-dark: #2E8FAA;
+            --black: #0A0A0A; --dark: #111118; --dark2: #1A1A24;
+            --white: #F0EDE4; --parchment: #D4C89A;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:transparent; font-family:'Cinzel',serif; color:var(--white); overflow:hidden; width:1920px; height:1080px; }
+        .overlay-wrapper { width:1920px; height:1080px; position:relative; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+
+        .panel { width:620px; position:relative; opacity:0; transform:translateY(30px) scale(0.97); transition:opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
+        .panel.visible { opacity:1; transform:translateY(0) scale(1); }
+        .panel.hiding  { opacity:0; transform:translateY(20px) scale(0.98); transition:opacity .4s ease, transform .4s ease; }
+
+        .header { position:relative; display:flex; align-items:center; justify-content:space-between; background:linear-gradient(135deg,var(--black) 0%,var(--dark2) 60%,#1C1400 100%); border:1px solid var(--gold-dark); border-bottom:none; padding:14px 24px; clip-path:polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,0 100%); }
+        .header::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(245,184,0,.04),transparent); pointer-events:none; }
+        .header-topline { position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold),var(--gold-light),var(--gold),transparent); }
+        .header-left { display:flex; align-items:center; gap:12px; }
+        .header-icon { width:36px; height:36px; border:1.5px solid var(--gold-dark); background:rgba(245,184,0,.08); display:flex; align-items:center; justify-content:center; clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); }
+        .header-icon svg { width:18px; height:18px; }
+        .header-label { font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--gold); opacity:.85; }
+        .header-title { font-size:19px; font-weight:700; color:var(--white); letter-spacing:1.5px; text-transform:uppercase; }
+        .header-badge { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+        .badge-text { font-size:8px; letter-spacing:2px; color:var(--celeste); text-transform:uppercase; opacity:.9; }
+        .badge-dots { display:flex; gap:4px; }
+        .badge-dot { width:6px; height:6px; background:var(--gold); clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%); animation:dotPulse 2s ease-in-out infinite; }
+        .badge-dot:nth-child(2) { animation-delay:.3s; background:var(--celeste); }
+        .badge-dot:nth-child(3) { animation-delay:.6s; }
+        @keyframes dotPulse { 0%,100%{opacity:.4;transform:scale(.8)} 50%{opacity:1;transform:scale(1)} }
+
+        .divider { height:3px; background:linear-gradient(90deg,var(--dark2),var(--gold-dark) 20%,var(--gold) 35%,var(--gold-light) 50%,var(--gold) 65%,var(--gold-dark) 80%,var(--dark2)); position:relative; }
+        .divider::before,.divider::after { content:'◆'; position:absolute; top:50%; transform:translateY(-50%); color:var(--gold); font-size:10px; line-height:1; }
+        .divider::before { left:20px; } .divider::after { right:20px; }
+
+        .map-frame { position:relative; background:var(--black); border-left:1px solid var(--gold-dark); border-right:1px solid var(--gold-dark); overflow:hidden; }
+        .map-image { width:100%; height:300px; background-size:cover; background-position:center; transition:opacity .35s ease, transform .35s ease; position:relative; }
+        .map-image::after { content:''; position:absolute; inset:0; background:linear-gradient(to bottom,rgba(10,10,10,.3) 0%,transparent 30%,transparent 60%,rgba(10,10,10,.7) 100%),linear-gradient(to right,rgba(10,10,10,.2) 0%,transparent 15%,transparent 85%,rgba(10,10,10,.2) 100%); }
+        .map-texture { position:absolute; inset:0; background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px); pointer-events:none; z-index:2; }
+        .corner { position:absolute; width:24px; height:24px; z-index:5; }
+        .corner-tl { top:6px;    left:6px;  border-top:2px solid var(--gold); border-left:2px solid var(--gold); }
+        .corner-tr { top:6px;    right:6px; border-top:2px solid var(--gold); border-right:2px solid var(--gold); }
+        .corner-bl { bottom:6px; left:6px;  border-bottom:2px solid var(--gold); border-left:2px solid var(--gold); }
+        .corner-br { bottom:6px; right:6px; border-bottom:2px solid var(--gold); border-right:2px solid var(--gold); }
+
+        /* TOP CIVS */
+        .civs-bar { background:linear-gradient(135deg,#0f0c00 0%,#1a1500 100%); border-left:1px solid var(--gold-dark); border-right:1px solid var(--gold-dark); padding:10px 16px 12px; border-top:.5px solid rgba(245,184,0,.15); }
+        .civs-title { font-size:8px; letter-spacing:3px; color:var(--gold-dark); text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+        .civs-title::after { content:''; flex:1; height:.5px; background:linear-gradient(to right,var(--gold-dark),transparent); }
+        .civs-list { display:flex; gap:8px; align-items:stretch; }
+        .civ-chip { display:flex; align-items:center; gap:6px; background:rgba(245,184,0,.06); border:.5px solid rgba(245,184,0,.2); border-radius:3px; padding:4px 8px 4px 4px; flex:1; min-width:0; }
+        .civ-chip:first-child { border-color:rgba(245,184,0,.5); background:rgba(245,184,0,.1); }
+        .civ-img { width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid rgba(245,184,0,.3); flex-shrink:0; }
+        .civ-info { min-width:0; }
+        .civ-name-text { font-size:8px; font-weight:600; color:var(--white); letter-spacing:.5px; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .civ-wr { font-size:11px; font-weight:700; color:var(--gold); }
+        .civ-chip:first-child .civ-wr { color:var(--gold-light); }
+        .civs-loading { font-size:9px; color:rgba(245,184,0,.3); letter-spacing:2px; text-align:center; padding:8px 0; width:100%; }
+
+        /* FOOTER */
+        .footer { background:linear-gradient(135deg,var(--black) 0%,var(--dark2) 60%,#1C1400 100%); border:1px solid var(--gold-dark); border-top:none; padding:12px 24px 16px; position:relative; clip-path:polygon(0 0,100% 0,100% calc(100% - 20px),calc(100% - 20px) 100%,0 100%); }
+        .footer::before { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold-dark),var(--gold),var(--gold-dark),transparent); }
+        .footer-stripe { position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,transparent,var(--celeste-dark) 15%,var(--celeste) 50%,var(--celeste-dark) 85%,transparent); }
+        .map-name-row { display:flex; align-items:baseline; gap:12px; margin-bottom:4px; }
+        .map-name { font-size:24px; font-weight:700; color:var(--white); letter-spacing:2px; text-transform:uppercase; text-shadow:0 0 20px rgba(245,184,0,.2); transition:opacity .3s ease; flex:1; }
+        .map-category { font-size:11px; font-weight:600; color:var(--celeste); letter-spacing:2px; text-transform:uppercase; opacity:.9; white-space:nowrap; }
+        .footer-meta { display:flex; align-items:center; gap:8px; }
+        .meta-icon { width:8px; height:8px; background:var(--gold); clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%); flex-shrink:0; }
+        .meta-text { font-size:10px; letter-spacing:2.5px; color:var(--parchment); opacity:.55; text-transform:uppercase; }
+        .footer-logo { position:absolute; right:20px; top:50%; transform:translateY(-50%); width:44px; height:44px; opacity:.25; background-image:url('copa_uruguaya2026.png'); background-size:contain; background-repeat:no-repeat; background-position:center; filter:grayscale(.3) sepia(.5) hue-rotate(10deg); }
+        .firma { position:absolute; bottom:5px; right:68px; font-size:7px; color:rgba(212,200,154,.2); letter-spacing:1.5px; text-transform:uppercase; }
+    </style>
+</head>
+<body>
+<div class="overlay-wrapper">
+    <div class="panel" id="panel">
+        <div class="header">
+            <div class="header-topline"></div>
+            <div class="header-left">
+                <div class="header-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#F5B800" stroke-width="1.5" stroke-linecap="round">
+                        <line x1="12" y1="2" x2="12" y2="18"/><line x1="8" y1="10" x2="16" y2="10"/><circle cx="12" cy="20" r="2" fill="#F5B800" stroke="none"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="header-label">Copa Uruguaya AOE II</div>
+                    <div class="header-title">Mapa en Juego</div>
+                </div>
+            </div>
+            <div class="header-badge">
+                <div class="badge-text">EN VIVO</div>
+                <div class="badge-dots">
+                    <div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div>
+                </div>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="map-frame">
+            <div class="map-texture"></div>
+            <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+            <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+            <div class="map-image" id="mapImg"></div>
+        </div>
+        <div class="civs-bar">
+            <div class="civs-title" id="civsTitle">Top civs · Copa Uruguaya 2026</div>
+            <div class="civs-list" id="civsList">
+                <div class="civs-loading">Esperando mapa...</div>
+            </div>
+        </div>
+        <div class="footer">
+            <div class="footer-stripe"></div>
+            <div class="footer-logo"></div>
+            <div class="map-name-row">
+                <div class="map-name" id="mapName">SELECCIONANDO...</div>
+                <div class="map-category" id="mapCategory"></div>
+            </div>
+            <div class="footer-meta">
+                <div class="meta-icon"></div>
+                <div class="meta-text" id="metaText">Aguardando selección de mapa</div>
+            </div>
+            <div class="firma">Diseñado por JabsUY · AUA 2026</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// CONFIGURACIÓN DE RUTAS
+// Usa las APIs de tu servidor en lugar de archivos locales para evitar el 404
+const MAPS_JSON_URL   = window.location.origin + '/api/mapas';
+const API_CONTROL_URL = window.location.origin + '/api/overlay/mapa';
+const STATS_JSON_URL  = window.location.origin + '/api/stats';
+const CIV_IMG_BASE    = 'https://backend.cdn.aoe2companion.com/public/aoe2/de/civilizations/{slug}.png';
+
+let baseDeMapas = {};
+let lastTs = null;
+
+// 1. Cargar la base de mapas local al iniciar
+async function cargarBaseDeMapas() {
+    try {
+        const r = await fetch(MAPS_JSON_URL + '?t=' + Date.now());
+        baseDeMapas = await r.json();
+    } catch (e) { console.error("Error cargando mapas local:", e); }
+}
+
+// 2. Función para encontrar el mapa lindo usando el nombre feo de las stats
+function encontrarMapaConfig(nombreSucio) {
+    if (!nombreSucio) return null;
+    console.log(nombreSucio);
+    for (const id in baseDeMapas) {
+        if (nombreSucio.toLowerCase().includes(baseDeMapas[id].name.toLowerCase())) {
+            return baseDeMapas[id];
+        }
+    }
+    return null;
+}
+
+// 3. Obtener el Top 5 desde las estadísticas reales del torneo
+async function fetchTopCivs(mapName) {
+    try {
+        console.log("Buscando estadísticas para el mapa (filtro):", mapName);
+
+        const r = await fetch(STATS_JSON_URL + '?t=' + Date.now());
+        if (!r.ok) return null;
+        
+        const data = await r.json();
+        const ranking = [];
+
+        if (!data.civs) return null;
+
+        const nombreBusqueda = mapName.toLowerCase();
+
+        for (const civName in data.civs) {
+            const civData = data.civs[civName];
+            
+            if (civData.por_mapa) {
+                // Buscamos una clave que CONTENGA el nombre que viene del overlay
+                // Ejemplo: si mapName es "Slopes", encontrará "CopaU_2026_Slopes v2 (Custom)"
+                const mapaRealKey = Object.keys(civData.por_mapa).find(key => 
+                    key.toLowerCase().includes(nombreBusqueda)
+                );
+
+                if (mapaRealKey) {
+                    const stats = civData.por_mapa[mapaRealKey];
+                    ranking.push({
+                        name: civName,
+                        slug: civName.toLowerCase().replace(/\s+/g, ''),
+                        wr: stats.winrate,
+                        jugadas: stats.jugadas
+                    });
+                }
+            }
+        }
+
+        const resultado = ranking
+            .sort((a, b) => b.wr - a.wr || b.jugadas - a.jugadas)
+            .slice(0, 5);
+
+        console.log(`Resultados encontrados para "${mapName}":`, resultado.length);
+        return resultado;
+
+    } catch (e) {
+        console.error("Error en fetchTopCivs:", e);
+        return null;
+    }
+}
+
+function renderCivs(civs) {
+    const el = document.getElementById('civsList');
+    if (!civs || civs.length === 0) {
+        el.innerHTML = '<div class="civs-loading">Sin estadísticas en este mapa (Copa 2026)</div>';
+        return;
+    }
+    el.innerHTML = civs.map(c => `
+        <div class="civ-chip">
+            <img class="civ-img" src="${CIV_IMG_BASE.replace('{slug}', c.slug)}" onerror="this.style.display='none'"/>
+            <div class="civ-info">
+                <div class="civ-name-text">${c.name}</div>
+                <div class="civ-wr">${c.wr.toFixed(0)}%</div>
+            </div>
+        </div>`).join('');
+}
+
+async function updateUI(estado) {
+    const panel  = document.getElementById('panel');
+    const imgEl  = document.getElementById('mapImg');
+    const nameEl = document.getElementById('mapName');
+    const catEl  = document.getElementById('mapCategory');
+
+    // Mapeo inteligente
+    const config = encontrarMapaConfig(estado.name);
+
+    imgEl.style.opacity = '0';
+    await new Promise(r => setTimeout(r, 320));
+
+    if (config) {
+        imgEl.style.backgroundImage = `url('${config.url}')`;
+        nameEl.textContent = config.name.toUpperCase();
+        catEl.textContent  = config.Categoria ? `· ${config.Categoria}` : '';
+    } else {
+        // Fallback si no está en tu JSON
+        imgEl.style.backgroundImage = `url('${estado.url}')`;
+        nameEl.textContent = (estado.name || "DESCONOCIDO").toUpperCase();
+        catEl.textContent  = estado.categoria ? `· ${estado.categoria}` : '';
+    }
+
+    imgEl.style.opacity = '1';
+    panel.classList.remove('hiding');
+    panel.classList.add('visible');
+
+    // Actualizar estadísticas del torneo
+    renderCivs(await fetchTopCivs(estado.name));
+}
+
+function ocultarPanel() {
+    const panel = document.getElementById('panel');
+    panel.classList.remove('visible');
+    panel.classList.add('hiding');
+}
+
+// Polling de la API de control
+async function poll() {
+    try {
+        const r = await fetch(API_CONTROL_URL + '?t=' + Date.now());
+        const estado = await r.json();
+        if (estado.ts === lastTs) return;
+        lastTs = estado.ts;
+        if (!estado.visible || !estado.id || estado.id === '0') ocultarPanel();
+        else await updateUI(estado);
+    } catch(e) {}
+}
+
+// WebSocket e Inicio
+const WS_SERVER = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host;
+let wsConnected = false;
+
+function conectarWS() {
+    const ws = new WebSocket(WS_SERVER + '/ws?canal=mapa');
+    ws.onopen = () => wsConnected = true;
+    ws.onmessage = async e => {
+        const estado = JSON.parse(e.data);
+        lastTs = estado.ts;
+        if (!estado.visible || !estado.id || estado.id === '0') ocultarPanel();
+        else await updateUI(estado);
+    };
+    ws.onclose = () => { wsConnected = false; setTimeout(conectarWS, 5000); };
+}
+
+// Arranque
+cargarBaseDeMapas().then(() => {
+    conectarWS();
+    poll();
+    setInterval(() => { if (!wsConnected) poll(); }, 3000);
+});
+</script>
+</body>
+</html>

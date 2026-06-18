@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cargar REC — AUA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'; this.onload=null;" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" href="/img/favicon-32x32.png" type="image/png" />
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar mínima -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚔</div>
+      <div class="brand-text">AUA</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-label">Navegación</div>
+      <a href="/dashboard" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 7h2v7h4v-4h2v4h4V7h2L8 1z"/></svg>
+        Mi Dashboard
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <form method="POST" action="/auth/logout" style="margin:0">
+        <button type="submit" class="signout-btn">Abandonar campo</button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">Cargar REC</div>
+        <div class="page-sub"><%= partido.j1_nombre %> vs <%= partido.j2_nombre %></div>
+      </div>
+      <a href="/dashboard" style="font-size:12px;color:var(--muted);border:0.5px solid var(--brown);padding:6px 14px;border-radius:6px;text-decoration:none;transition:color 0.18s">
+        ← Volver
+      </a>
+    </div>
+
+    <% if (flash) { %><div class="alert alert-ok"><%= flash %></div><% } %>
+    <% if (error) { %><div class="alert alert-err"><%= error %></div><% } %>
+    <div id="resultado-feedback" style="display:none" class="alert"></div>
+
+    <div style="max-width:640px">
+
+      <!-- Info del partido -->
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-header">
+          <span class="panel-title"><%= partido.fase %></span>
+          <span class="panel-count">Ronda <%= partido.ronda %></span>
+        </div>
+        <div class="match-body">
+          <div class="player-name"><%= partido.j1_nombre %></div>
+          <div class="vs-badge">VS</div>
+          <div class="player-name right"><%= partido.j2_nombre %></div>
+        </div>
+      </div>
+
+      <!-- Coordinación de fecha -->
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-header"><span class="panel-title">Coordinar fecha</span></div>
+        <div style="padding:16px">
+          <% if (partido.coordinado) { %>
+          <div style="font-size:13px;color:var(--win);margin-bottom:12px">
+            <i class="fas fa-calendar-check" style="margin-right:6px"></i>
+            Acordado: <strong><%= new Date(partido.coordinado).toLocaleString('es-UY') %></strong>
+          </div>
+          <% } else { %>
+          <div style="font-size:12px;color:var(--dim);margin-bottom:12px">Sin fecha coordinada aún.</div>
+          <% } %>
+          <div style="display:flex;gap:10px;align-items:flex-end">
+            <div style="flex:1">
+              <label style="font-size:11px;color:var(--dim);display:block;margin-bottom:6px">Nueva fecha y hora</label>
+              <input type="datetime-local" id="coordinar-fecha" style="width:100%;padding:9px 12px;background:var(--bg3);border:0.5px solid var(--brown);border-radius:7px;color:var(--text);font-size:12px" />
+            </div>
+            <button onclick="coordinarPartido()" id="btn-coordinar" class="btn-submit" style="white-space:nowrap;flex-shrink:0">Guardar fecha</button>
+          </div>
+          <div id="coordinar-feedback" style="display:none;margin-top:8px;font-size:12px"></div>
+        </div>
+      </div>
+
+      <!-- Formulario resultado -->
+      <form id="resultado-form" enctype="multipart/form-data">
+        <input type="hidden" name="partidoId" value="<%= partido.id %>" />
+
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Marcador</span></div>
+          <div class="form-grid">
+
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:end">
+              <div>
+                <label><%= partido.j1_nombre %></label>
+                <input type="number" name="score1" min="0" value="<%= partido.score1 ?? '' %>" placeholder="0" required />
+              </div>
+              <div style="padding-bottom:10px;color:var(--dim);font-family:'Cinzel',serif;font-size:18px">–</div>
+              <div>
+                <label><%= partido.j2_nombre %></label>
+                <input type="number" name="score2" min="0" value="<%= partido.score2 ?? '' %>" placeholder="0" required />
+              </div>
+            </div>
+
+            <div>
+              <label>Grabaciones (ZIP)</label>
+              <input type="file" name="rec_file" accept=".zip"
+                style="padding:9px 12px;background:var(--bg3);border:0.5px solid var(--brown);border-radius:7px;color:var(--text);font-size:12px;width:100%"
+              />
+              <% if (partido.rec_link) { %>
+              <div style="font-size:11px;color:var(--win);margin-top:6px">
+                <i class="fas fa-check" style="margin-right:4px"></i>
+                Ya tiene grabación — subir nuevo ZIP reemplazará el anterior.
+                <a href="<%= partido.rec_link %>" download style="color:var(--gold);margin-left:8px">Descargar</a>
+              </div>
+              <% } else { %>
+              <div style="font-size:11px;color:var(--dim);margin-top:6px">El ZIP de grabaciones es obligatorio.</div>
+              <% } %>
+            </div>
+
+            <!-- Civs draft — obligatorio -->
+            <div>
+              <label style="display:flex;align-items:center;gap:8px">
+                Código Draft de Civs
+                <span id="civs-req" style="font-size:10px;color:#c87060;font-weight:600"><%= partido.draftcivs ? '' : '* obligatorio' %></span>
+                <span id="civs-ok" style="font-size:10px;color:#a8c860;display:<%= partido.draftcivs ? 'inline' : 'none' %>">✓ cargado</span>
+              </label>
+              <div style="display:flex;gap:8px;margin-top:4px">
+                <input type="text" name="draftcivs" id="draftcivsInput"
+                       value="<%= partido.draftcivs || '' %>"
+                       placeholder="ej: hXKdi" maxlength="10"
+                       oninput="alCambiarCivs()"
+                       style="font-family:monospace"/>
+                <button type="button" onclick="verificarDraftCivs()" class="btn-action" style="white-space:nowrap;flex-shrink:0">Verificar</button>
+              </div>
+              <div id="civs-preview" style="margin-top:6px"></div>
+            </div>
+
+            <!-- Mapa — opcional, modo draft o mapa único -->
+            <div>
+              <label style="margin-bottom:6px;display:block">
+                Mapa <span style="font-size:10px;color:var(--muted);font-weight:400">(opcional)</span>
+              </label>
+              <div style="display:flex;gap:6px;margin-bottom:8px">
+                <button type="button" id="mapBtnDraft"  onclick="setMapModePartido('draft')"  class="btn-action" style="flex:1;font-size:11px">Código draft</button>
+                <button type="button" id="mapBtnSingle" onclick="setMapModePartido('single')" class="btn-action" style="flex:1;font-size:11px;opacity:.5">Mapa único (Arabia/Nomad…)</button>
+              </div>
+              <div id="map-draft-ui">
+                <div style="display:flex;gap:8px">
+                  <input type="text" id="mapDraftInput" placeholder="ej: XyZwQ" maxlength="10"
+                         oninput="alCambiarMapaDraft()" style="font-family:monospace"/>
+                  <button type="button" onclick="verificarDraftMapas()" class="btn-action" style="white-space:nowrap;flex-shrink:0">Verificar</button>
+                </div>
+                <div id="map-draft-preview" style="margin-top:6px"></div>
+              </div>
+              <div id="map-single-ui" style="display:none">
+                <input type="text" id="mapSingleInput" placeholder="ej: Arabia, Nomad, Hideout…"
+                       oninput="document.getElementById('draftmapHidden').value=this.value"/>
+              </div>
+              <input type="hidden" name="draftmap" id="draftmapHidden" value="<%= partido.draftmap || '' %>"/>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btn-submit-resultado">
+              <i class="fas fa-film" style="margin-right:7px"></i>
+              <% if (partido.estado === 'finalizado') { %>
+                Actualizar REC
+              <% } else { %>
+                Cargar REC
+              <% } %>
+            </button>
+
+          </div>
+        </div>
+      </form>
+
+    </div>
+  </main>
+</div>
+
+<script>
+// ── Draft de civs ─────────────────────────────────────────────────────────────
+let civDraftVerificado = !!('<%= partido.draftcivs || "" %>'.trim());
+
+function alCambiarCivs() {
+  civDraftVerificado = false;
+  document.getElementById('civs-req').textContent = '* obligatorio';
+  document.getElementById('civs-ok').style.display = 'none';
+  document.getElementById('civs-preview').innerHTML = '';
+}
+
+async function verificarDraftCivs() {
+  const code = document.getElementById('draftcivsInput').value.trim();
+  if (!code) { mostrarPrev('civs-preview', 'Ingresá el código.', '#806040'); return; }
+  mostrarPrev('civs-preview', 'Verificando…', '#806040');
+  try {
+    const r = await fetch('https://aoe2cm.net/api/draft/' + code);
+    if (!r.ok) throw new Error('Código no encontrado');
+    const data = await r.json();
+    if (!data.events?.length) throw new Error('Draft sin eventos');
+
+    const picks   = data.events.filter(e => e.actionType === 'pick' && e.chosenOptionId);
+    const hPicks  = picks.filter(e => e.player === 'HOST').map(e => e.chosenOptionId).join(', ');
+    const gPicks  = picks.filter(e => e.player === 'GUEST').map(e => e.chosenOptionId).join(', ');
+
+    civDraftVerificado = true;
+    document.getElementById('civs-req').textContent = '';
+    document.getElementById('civs-ok').style.display = 'inline';
+    document.getElementById('civs-preview').innerHTML =
+      `<div style="background:rgba(40,30,10,.7);border:0.5px solid #3a2a1a;border-radius:6px;padding:8px 10px;font-size:11px">
+        <div style="color:#6aaae8"><strong>${data.nameHost||'Host'}:</strong> ${hPicks||'—'}</div>
+        <div style="color:#e86a8a;margin-top:3px"><strong>${data.nameGuest||'Guest'}:</strong> ${gPicks||'—'}</div>
+       </div>`;
+  } catch(e) {
+    civDraftVerificado = false;
+    mostrarPrev('civs-preview', '✕ ' + e.message, '#c87060');
+  }
+}
+
+// ── Draft de mapas ────────────────────────────────────────────────────────────
+let mapModePartido = 'draft';
+
+function setMapModePartido(mode) {
+  mapModePartido = mode;
+  document.getElementById('map-draft-ui').style.display  = mode === 'draft'  ? '' : 'none';
+  document.getElementById('map-single-ui').style.display = mode === 'single' ? '' : 'none';
+  document.getElementById('mapBtnDraft').style.opacity   = mode === 'draft'  ? '1' : '.5';
+  document.getElementById('mapBtnSingle').style.opacity  = mode === 'single' ? '1' : '.5';
+  if (mode === 'single') {
+    document.getElementById('draftmapHidden').value = document.getElementById('mapSingleInput').value;
+  } else {
+    document.getElementById('draftmapHidden').value = document.getElementById('mapDraftInput').value;
+  }
+}
+
+function alCambiarMapaDraft() {
+  document.getElementById('draftmapHidden').value = document.getElementById('mapDraftInput').value;
+  document.getElementById('map-draft-preview').innerHTML = '';
+}
+
+async function verificarDraftMapas() {
+  const code = document.getElementById('mapDraftInput').value.trim();
+  if (!code) return;
+  const preview = document.getElementById('map-draft-preview');
+  mostrarPrev('map-draft-preview', 'Verificando…', '#806040');
+  try {
+    const r = await fetch('https://aoe2cm.net/api/draft/' + code);
+    if (!r.ok) throw new Error('Código no encontrado');
+    const data = await r.json();
+    const opts = data.preset?.draftOptions || [];
+    const nombre = (id) => opts.find(o => o.id === id)?.name || id;
+    const events = data.events.filter(e => e.chosenOptionId && e.actionType);
+    const hMaps  = events.filter(e => e.player === 'HOST').map(e => nombre(e.chosenOptionId)).join(', ');
+    const gMaps  = events.filter(e => e.player === 'GUEST').map(e => nombre(e.chosenOptionId)).join(', ');
+    const nMaps  = events.filter(e => e.player === 'NONE' && e.actionType === 'pick').map(e => nombre(e.chosenOptionId)).join(', ');
+    document.getElementById('draftmapHidden').value = code;
+    preview.innerHTML =
+      `<div style="background:rgba(40,30,10,.7);border:0.5px solid #3a2a1a;border-radius:6px;padding:8px 10px;font-size:11px">
+        ${hMaps  ? `<div style="color:#6aaae8"><strong>${data.nameHost||'Host'}:</strong> ${hMaps}</div>` : ''}
+        ${gMaps  ? `<div style="color:#e86a8a;margin-top:3px"><strong>${data.nameGuest||'Guest'}:</strong> ${gMaps}</div>` : ''}
+        ${nMaps  ? `<div style="color:#a09070;margin-top:3px"><strong>Neutral:</strong> ${nMaps}</div>` : ''}
+       </div>`;
+  } catch(e) {
+    mostrarPrev('map-draft-preview', '✕ ' + e.message, '#c87060');
+  }
+}
+
+function mostrarPrev(id, msg, color) {
+  document.getElementById(id).innerHTML = `<span style="color:${color};font-size:12px">${msg}</span>`;
+}
+
+// ── Coordinar ─────────────────────────────────────────────────────────────────
+async function coordinarPartido() {
+  const btn = document.getElementById('btn-coordinar');
+  const fb  = document.getElementById('coordinar-feedback');
+  const fecha = document.getElementById('coordinar-fecha').value;
+  if (!fecha) { fb.style.display='block'; fb.style.color='#c87060'; fb.textContent='Seleccioná una fecha.'; return; }
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/partidos/coordinar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ partidoId: '<%= partido.id %>', fecha_hora: fecha })
+    });
+    const d = await r.json();
+    fb.style.display = 'block';
+    if (d.success) { fb.style.color='var(--win)'; fb.textContent='Fecha guardada correctamente.'; }
+    else { fb.style.color='#c87060'; fb.textContent=d.error||'Error al guardar.'; btn.disabled=false; }
+  } catch { fb.style.display='block'; fb.style.color='#c87060'; fb.textContent='Error de conexión.'; btn.disabled=false; }
+}
+
+// ── Enviar resultado ──────────────────────────────────────────────────────────
+document.getElementById('resultado-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-submit-resultado');
+  const fb  = document.getElementById('resultado-feedback');
+
+  // Validar civs obligatorio
+  const civsCode = document.getElementById('draftcivsInput').value.trim();
+  if (!civsCode) {
+    fb.style.display='block'; fb.className='alert alert-err';
+    fb.textContent='El código de draft de civs es obligatorio.'; return;
+  }
+  if (!civDraftVerificado) {
+    fb.style.display='block'; fb.className='alert alert-err';
+    fb.textContent='Verificá el código de draft de civs antes de enviar.'; return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  try {
+    const formData = new FormData(this);
+    const r = await fetch('/api/partidos/resultado', { method:'POST', body:formData });
+    const d = await r.json();
+    fb.style.display = 'block';
+    if (d.success || d.message) {
+      fb.className = 'alert alert-ok';
+      fb.textContent = d.message || '¡Resultado guardado!';
+      setTimeout(() => window.location.href = '/dashboard?msg=' + encodeURIComponent('Resultado guardado.'), 1200);
+    } else {
+      fb.className = 'alert alert-err';
+      fb.textContent = d.error || 'Error al guardar.';
+      btn.disabled = false; btn.textContent = 'Cargar REC';
+    }
+  } catch {
+    fb.style.display='block'; fb.className='alert alert-err';
+    fb.textContent='Error de conexión.';
+    btn.disabled=false; btn.textContent='Reportar resultado';
+  }
+});
+</script>
+</body>
+</html>

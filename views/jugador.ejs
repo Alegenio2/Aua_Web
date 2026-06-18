@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= jugador.nombre %> — AUA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'; this.onload=null;" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" href="/img/favicon-32x32.png" type="image/png" />
+  <style>
+    .jugador-hero {
+      background: linear-gradient(180deg, #1a0a00 0%, var(--bg0) 100%);
+      border-bottom: 0.5px solid var(--brown);
+      padding: 36px 24px 28px;
+    }
+    .jugador-hero-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .jugador-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: var(--bg3); border: 2px solid var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cinzel', serif; font-size: 26px; color: var(--gold); font-weight: 700;
+      flex-shrink: 0;
+    }
+    .jugador-nombre { font-family: 'Cinzel', serif; font-size: clamp(20px, 4vw, 32px); color: var(--gold); margin-bottom: 6px; }
+    .jugador-meta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .jugador-meta span { font-size: 13px; color: var(--muted); }
+    .jugador-meta strong { color: var(--text); }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+    .metric { background: var(--bg2); border: 0.5px solid var(--brown); border-radius: 8px; padding: 13px 14px; }
+    .metric-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .metric-value { font-size: 22px; font-weight: 700; color: var(--gold); font-family: 'Cinzel', serif; }
+    .metric-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
+
+    .content-wrap { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+    .section-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+    .torneo-pills { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    .torneo-pill {
+      background: var(--bg2); border: 0.5px solid var(--brown); border-radius: 10px;
+      padding: 12px 16px; min-width: 140px;
+    }
+    .torneo-pill-nombre { font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold); margin-bottom: 6px; }
+    .torneo-pill-stats { font-size: 11px; color: var(--muted); }
+    .torneo-pill-wr { font-size: 13px; font-weight: 700; margin-top: 4px; }
+
+    .match-table { width: 100%; border-collapse: collapse; }
+    .match-table th { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 10px; text-align: left; border-bottom: 0.5px solid var(--brown); }
+    .match-table td { padding: 10px; font-size: 12px; border-bottom: 0.5px solid rgba(58,42,26,0.3); vertical-align: middle; }
+    .match-table tr:last-child td { border-bottom: none; }
+    .score-cell { font-family: 'Cinzel', serif; font-weight: 700; color: var(--gold); }
+    .badge-win  { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; background: #1a2208; border: 0.5px solid #6a8040; color: var(--win); }
+    .badge-loss { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; background: #220d08; border: 0.5px solid #6a3020; color: #c87060; }
+    .empty-msg { background: var(--bg2); border: 0.5px solid var(--brown); border-radius: 12px; padding: 32px; text-align: center; color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 600px) {
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .match-table .hide-mobile { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="header-logo" href="/">
+    <span class="logo-icon">⚔</span>
+    <span class="logo-text">AUA</span>
+  </a>
+  <nav>
+    <a href="/eventos">Eventos</a>
+    <a href="/torneos">Salón de la Fama</a>
+    <a href="/copa_stats">📊 Stats</a>
+  </nav>
+  <div class="header-actions">
+    <% if (user) { %>
+      <a href="/dashboard" class="nav-user" title="Ir al dashboard">
+        <% if (user.image) { %><img src="<%= user.image %>" alt="avatar" class="nav-avatar" /><% } %>
+        <span><%= user.name %></span>
+      </a>
+      <form method="POST" action="/auth/logout" style="display:inline;margin:0">
+        <button type="submit" class="nav-logout-btn" title="Cerrar sesión">✕</button>
+      </form>
+    <% } else { %>
+      <a href="/auth/discord" class="nav-discord-btn"><i class="fab fa-discord"></i>Ingresar</a>
+    <% } %>
+  </div>
+</header>
+
+<div class="jugador-hero">
+  <div class="jugador-hero-inner">
+    <div class="jugador-avatar">
+      <%= jugador.nombre.replace(/[|\[\]]/g,'').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase() %>
+    </div>
+    <div>
+      <div class="jugador-nombre"><%= jugador.nombre %></div>
+      <div class="jugador-meta">
+        <span><%= jugador.pais || '' %></span>
+        <% if (jugador.clan) { %><span>Clan: <strong><%= jugador.clan %></strong></span><% } %>
+        <span>ELO: <strong style="color:var(--gold)"><%= jugador.elo %></strong></span>
+        <% if (jugador.elomax > jugador.elo) { %><span>Máx: <strong><%= jugador.elomax %></strong></span><% } %>
+        <% if (jugador.profileId) { %>
+          <a href="https://aoe2companion.com/player/<%= jugador.profileId %>/<%= encodeURIComponent(jugador.nombre) %>" target="_blank" rel="noopener" style="font-size:11px;color:var(--gold);opacity:0.7">AoE2 Companion ↗</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content-wrap">
+
+  <%
+    const totalPJ = partidos.length;
+    const totalPG = partidos.filter(p => (p.jugador1_id === jugador.discordId ? p.score1 : p.score2) > (p.jugador1_id === jugador.discordId ? p.score2 : p.score1)).length;
+    const totalPP = totalPJ - totalPG;
+    const winrate = totalPJ > 0 ? Math.round((totalPG / totalPJ) * 100) : 0;
+    const wrColor = winrate >= 60 ? '#a8c860' : winrate >= 40 ? '#e8c87a' : '#c87060';
+  %>
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Partidos</div><div class="metric-value"><%= totalPJ %></div><div class="metric-sub">jugados</div></div>
+    <div class="metric"><div class="metric-label">Victorias</div><div class="metric-value" style="color:var(--win)"><%= totalPG %></div><div class="metric-sub">ganados</div></div>
+    <div class="metric"><div class="metric-label">Derrotas</div><div class="metric-value" style="color:#c87060"><%= totalPP %></div><div class="metric-sub">perdidos</div></div>
+    <div class="metric"><div class="metric-label">Win Rate</div><div class="metric-value" style="color:<%= wrColor %>"><%= winrate %>%</div><div class="metric-sub">rendimiento</div></div>
+  </div>
+
+  <% if (statsPorTorneo.length > 0) { %>
+  <div class="section-label">Por torneo</div>
+  <div class="torneo-pills">
+    <% statsPorTorneo.forEach(t => { %>
+      <%
+        const wr = t.pj > 0 ? Math.round((t.pg / t.pj) * 100) : 0;
+        const c = wr >= 60 ? '#a8c860' : wr >= 40 ? '#e8c87a' : '#c87060';
+      %>
+      <a href="/torneo/<%= t.slug %>" class="torneo-pill" style="text-decoration:none">
+        <div class="torneo-pill-nombre"><%= t.nombre %></div>
+        <div class="torneo-pill-stats"><%= t.pj %> partidos · <%= t.pg %>V / <%= t.pp %>D</div>
+        <div class="torneo-pill-wr" style="color:<%= c %>"><%= wr %>% WR</div>
+      </a>
+    <% }) %>
+  </div>
+  <% } %>
+
+  <div class="section-label">Historial de partidos</div>
+  <% if (partidos.length === 0) { %>
+  <div class="empty-msg">Este jugador no tiene partidos registrados aún.</div>
+  <% } else { %>
+  <div style="background:var(--bg2);border:0.5px solid var(--brown);border-radius:12px;overflow:hidden">
+    <table class="match-table">
+      <thead>
+        <tr>
+          <th>Resultado</th>
+          <th>Rival</th>
+          <th>Score</th>
+          <th class="hide-mobile">Torneo</th>
+          <th class="hide-mobile">Fase</th>
+          <th class="hide-mobile">Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% partidos.forEach(p => { %>
+          <%
+            const esMio = p.jugador1_id === jugador.discordId;
+            const miScore = esMio ? p.score1 : p.score2;
+            const suScore = esMio ? p.score2 : p.score1;
+            const rival = esMio ? p.j2_nombre : p.j1_nombre;
+            const rivalId = esMio ? p.jugador2_id : p.jugador1_id;
+            const gane = miScore > suScore;
+          %>
+          <tr>
+            <td><span class="<%= gane ? 'badge-win' : 'badge-loss' %>"><%= gane ? 'Victoria' : 'Derrota' %></span></td>
+            <td><a href="/jugador/<%= rivalId %>" style="color:var(--text);text-decoration:none"><%= rival %></a></td>
+            <td class="score-cell"><%= miScore %>–<%= suScore %></td>
+            <td class="hide-mobile"><a href="/torneo/<%= p.torneo_slug %>" style="color:var(--muted);font-size:11px;text-decoration:none"><%= p.torneo_nombre %></a></td>
+            <td class="hide-mobile" style="color:var(--dim);font-size:11px;text-transform:capitalize"><%= p.fase %> R<%= p.ronda %></td>
+            <td class="hide-mobile" style="color:var(--dim);font-size:11px"><%= p.fecha ? new Date(p.fecha).toLocaleDateString('es-UY') : '—' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
+
+<footer>
+  <div class="footer-logo">AUA</div>
+  <div class="footer-text">Asociación Uruguaya de Age of Empires II</div>
+  <div class="footer-links">
+    <a href="https://www.twitch.tv/jabsuy" target="_blank" title="Twitch"><i class="fab fa-twitch"></i></a>
+    <a href="https://www.youtube.com/@jabsuy" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
+    <a href="https://www.instagram.com/fumage_" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+    <a href="https://discord.gg/3xeSRaQxDE" target="_blank" title="Discord"><i class="fab fa-discord"></i></a>
+  </div>
+</footer>
+
+</body>
+</html>

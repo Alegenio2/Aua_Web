@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Login — Copa Uruguaya 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e0d8c8;font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-card{background:#111008;border:0.5px solid #3a2a1a;border-radius:12px;padding:40px 36px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:20px}
+.login-header{text-align:center}
+.login-logo{font-size:32px;margin-bottom:10px}
+.login-title{font-family:'Cinzel',serif;font-size:16px;color:#e8c87a;letter-spacing:3px;text-transform:uppercase}
+.login-sub{font-size:11px;color:#665544;letter-spacing:1px;margin-top:4px}
+.login-page-badge{font-size:10px;padding:4px 12px;border-radius:10px;background:rgba(232,200,122,0.08);border:0.5px solid rgba(232,200,122,0.2);color:#c8a040;letter-spacing:1px;text-align:center;margin-top:6px}
+.login-field{display:flex;flex-direction:column;gap:6px}
+.login-field label{font-size:10px;color:#806040;text-transform:uppercase;letter-spacing:1px}
+.login-field input{background:#0d0d0d;border:0.5px solid #3a2a1a;border-radius:7px;padding:11px 14px;color:#e0d8c8;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
+.login-field input:focus{border-color:#e8c87a}
+.btn-login{background:#e8c87a;color:#0a0a0a;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;font-family:'Cinzel',serif;letter-spacing:1px;cursor:pointer;transition:all 0.18s;margin-top:4px}
+.btn-login:hover{background:#f0d48a;transform:translateY(-1px)}
+.btn-login:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.login-error{font-size:12px;color:#c87060;text-align:center;background:rgba(180,40,40,0.1);border:0.5px solid rgba(180,40,40,0.3);border-radius:6px;padding:8px;display:none}
+.login-error.visible{display:block}
+.login-sep{height:0.5px;background:linear-gradient(to right,transparent,#3a2a1a,transparent)}
+.login-footer{text-align:center;font-size:10px;color:#3a2a1a;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="login-card">
+  <div class="login-header">
+    <div class="login-logo">⚔</div>
+    <div class="login-title">Copa Uruguaya 2026</div>
+    <div class="login-sub">Panel de Administración</div>
+    <div class="login-page-badge" id="page-badge">Cargando...</div>
+  </div>
+  <div class="login-sep"></div>
+  <div class="login-field">
+    <label>Contraseña</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"/>
+  </div>
+  <div class="login-error" id="error">Contraseña incorrecta</div>
+  <button class="btn-login" id="btnLogin">Entrar</button>
+  <div class="login-footer">AUA · Aldeano Oscar</div>
+</div>
+
+<script>
+const OSCAR    = window.location.origin;
+const params   = new URLSearchParams(window.location.search);
+const redirect = params.get('redirect') || 'overlay_control.html';
+
+// Determinar endpoint y label según la página de destino
+const PAGE_CONFIG = {
+  'admindraft.html':      { endpoint: '/auth/login/draft',   label: '🛡 Admin Draft',     tokenKey: 'aua_admin_token_draft' },
+  'overlay_control.html': { endpoint: '/auth/login/control', label: '🎮 Overlay Control',  tokenKey: 'aua_admin_token_control' },
+};
+const config = PAGE_CONFIG[redirect] || PAGE_CONFIG['overlay_control.html'];
+
+document.getElementById('page-badge').textContent = config.label;
+
+// Si ya tiene token válido, redirigir directo
+const existingToken = localStorage.getItem(config.tokenKey);
+if (existingToken) {
+  fetch(OSCAR + '/auth/verify', {
+    headers: { 'Authorization': 'Bearer ' + existingToken }
+  }).then(r => { if (r.ok) window.location.href = OSCAR + '/' + redirect; });
+}
+
+async function doLogin() {
+  const password = document.getElementById('password').value;
+  const btn      = document.getElementById('btnLogin');
+  const errEl    = document.getElementById('error');
+  if (!password) return;
+
+  btn.disabled    = true;
+  btn.textContent = 'Verificando...';
+  errEl.classList.remove('visible');
+
+  try {
+    const r = await fetch(OSCAR + config.endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+
+    if (r.ok) {
+      const { token } = await r.json();
+      localStorage.setItem(config.tokenKey, token);
+      window.location.href = redirect;
+    } else {
+      errEl.classList.add('visible');
+      btn.disabled    = false;
+      btn.textContent = 'Entrar';
+      document.getElementById('password').value = '';
+      document.getElementById('password').focus();
+    }
+  } catch(e) {
+    errEl.textContent = 'Error de conexión con el servidor';
+    errEl.classList.add('visible');
+    btn.disabled    = false;
+    btn.textContent = 'Entrar';
+  }
+}
+
+document.getElementById('btnLogin').addEventListener('click', doLogin);
+document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('password').focus();
+</script>
+</body>
+</html>

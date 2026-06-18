@@ -1,0 +1,6 @@
+﻿node_modules/
+botfmg.db
+.env
+.DS_Store
+*.log
+.cache/

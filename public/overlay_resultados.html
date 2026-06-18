@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Ticker Copa Uruguaya 2026 — Final Fix</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{width:1920px;height:1080px;background:transparent;overflow:hidden;font-family:'Inter',sans-serif}
+  
+  #ticker-container {
+    position: absolute;
+    bottom: 0; left: 0; right: 0; height: 100px;
+    background: linear-gradient(to top, rgba(8,5,2,0.95), rgba(8,5,2,0.6));
+    display: flex; flex-direction: column; overflow: hidden;
+    border-top: 2px solid #e8c87a;
+  }
+
+  #track-wrapper {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+  }
+
+  .animate { 
+    animation: scroll 200s linear infinite; 
+  }
+
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .ticker-track { 
+    display: flex; 
+    gap: 40px; 
+    align-items: center; 
+    padding: 10px 20px; 
+    white-space: nowrap;
+  }
+
+  .section-tag { 
+    color: #e8c87a; 
+    font-family: 'Cinzel'; 
+    font-weight: 700; 
+    border-left: 3px solid #e8c87a; 
+    padding-left: 10px; 
+    margin-right: 10px; 
+    text-transform: uppercase; 
+    font-size: 14px; 
+  }
+
+  .ticker-card { 
+    flex-shrink: 0; 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+    background: rgba(232,200,122,0.1); 
+    padding: 8px 18px; 
+    border-radius: 8px; 
+    border: 1px solid rgba(232,200,122,0.2); 
+  }
+
+  .ticker-nick { font-family: 'Cinzel'; color: #fff; font-size: 16px; font-weight: 700; }
+  .ticker-score { font-size: 22px; font-weight: 900; color: #e8c87a; display: flex; gap: 5px; align-items: center; }
+  .ticker-time { font-size: 15px; color: #5090b0; font-weight: 700; background: rgba(80,144,176,0.1); padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(80,144,176,0.3); }
+  
+  .win { color: #4ade80; }
+  .lose { color: #f87171; opacity: 0.8; }
+
+  #status { 
+    position: absolute; top: 20px; right: 20px; 
+    background: rgba(0,0,0,0.8); color: #e8c87a; 
+    padding: 5px 12px; font-size: 12px; border-radius: 4px; 
+    font-family: monospace; border: 1px solid #e8c87a; 
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<div id="status">INICIANDO...</div>
+
+<div id="ticker-container">
+  <div id="track-wrapper">
+    <div class="ticker-track" id="track-content"></div>
+    <div class="ticker-track" id="track-content-clone"></div>
+  </div>
+</div>
+
+<script>
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Función vital para ordenar los próximos partidos por fecha y hora
+function parseDateTime(fechaStr, horaStr) {
+  try {
+    if (!fechaStr || !horaStr) return 8640000000000000;
+    const cleanFecha = fechaStr.replace(/-/g, '/');
+    const parts = cleanFecha.split('/');
+    const timeParts = horaStr.split(':');
+    return new Date(parts[2], parts[1]-1, parts[0], timeParts[0], timeParts[1]).getTime();
+  } catch (e) { return 8640000000000000; }
+}
+
+async function fetchData() {
+  const statusEl = document.getElementById('status');
+  statusEl.innerText = "RECUPERANDO DATOS...";
+  
+  try {
+    // Traemos datos del servidor (admin) y del JSON original (torneo)
+    const [resAdmin, resTorneo] = await Promise.all([
+      fetch(window.location.origin + '/api/overlay/ticker'),
+      fetch(window.location.origin + '/api/torneos/1v1_copa_uruguaya_2026')
+    ]);
+    
+    const dataAdmin = await resAdmin.json();
+    const dataTorneo = await resTorneo.json();
+    
+    // 1. Tablas filtradas por el Admin
+    const tablasFiltradas = {};
+    if(dataAdmin.gruposVisibles && dataAdmin.tablas) {
+        dataAdmin.gruposVisibles.forEach(g => {
+            if(dataAdmin.tablas[g]) tablasFiltradas[g] = dataAdmin.tablas[g];
+        });
+    }
+
+    // 2. Extraer PRÓXIMOS partidos (los coordinados que no tienen resultado)
+    const proximos = [];
+    dataTorneo.rondas_grupos.forEach(rondaGrupo => {
+      rondaGrupo.partidos.forEach(ronda => {
+        ronda.partidos.forEach(p => {
+          // Si tiene fecha y hora pero NO tiene resultado, es un coordinado próximo
+          if (!p.resultado && p.fecha && p.horario) {
+            proximos.push(p);
+          }
+        });
+      });
+    });
+
+    // Ordenamos por fecha
+    proximos.sort((a,b) => parseDateTime(a.fecha, a.horario) - parseDateTime(b.fecha, b.horario));
+
+    render(dataAdmin.resultados || [], tablasFiltradas, proximos);
+    
+    statusEl.innerText = "LIVE - SIN SPOILERS (L: Refresh)";
+    statusEl.style.color = "#4ade80";
+  } catch(e) { 
+    console.error(e);
+    statusEl.innerText = "ERROR DE CARGA";
+    statusEl.style.color = "#f87171";
+  }
+}
+
+function render(partidosElegidos, tablasData, proximosData) {
+  const wrapper = document.getElementById('track-wrapper');
+  const content1 = document.getElementById('track-content');
+  const content2 = document.getElementById('track-content-clone');
+  
+  wrapper.classList.remove('animate');
+  let html = "";
+
+  // --- RESULTADOS (Admin) ---
+  if(partidosElegidos.length > 0){
+    html += '<span class="section-tag">RESULTADOS</span>';
+    partidosElegidos.forEach(r => {
+      html += `<div class="ticker-card">
+                <span class="ticker-nick">${escapeHtml(r.p1)}</span>
+                <div class="ticker-score">
+                    <span class="${r.s1 > r.s2 ? 'win' : 'lose'}">${r.s1}</span>
+                    <span style="opacity:0.3">-</span>
+                    <span class="${r.s2 > r.s1 ? 'win' : 'lose'}">${r.s2}</span>
+                </div>
+                <span class="ticker-nick">${escapeHtml(r.p2)}</span>
+               </div>`;
+    });
+  }
+
+  // --- PRÓXIMOS (Coordinados) ---
+  if(proximosData.length > 0){
+    html += '<span class="section-tag">PRÓXIMOS</span>';
+    proximosData.forEach(p => {
+      html += `<div class="ticker-card">
+                <span class="ticker-nick">${escapeHtml(p.jugador1Nick)}</span>
+                <span class="ticker-time">${p.diaSemana ? p.diaSemana.substring(0,3).toUpperCase() : ''} ${p.horario}</span>
+                <span class="ticker-nick">${escapeHtml(p.jugador2Nick)}</span>
+               </div>`;
+    });
+  }
+
+  // --- TABLAS (Admin) ---
+  if(Object.keys(tablasData).length > 0){
+    html += '<span class="section-tag">TABLAS</span>';
+    Object.entries(tablasData).forEach(([grupo, jug]) => {
+      html += `<span class="section-tag" style="border-left:1px solid #444; font-size:11px">${grupo}</span>`;
+      jug.forEach(j => {
+        html += `<div class="ticker-card">
+                    <span class="ticker-nick">${escapeHtml(j.nick)}</span>
+                    <span class="ticker-score">${j.pts} <small style="font-size:10px">PTS</small></span>
+                 </div>`;
+      });
+    });
+  }
+
+  content1.innerHTML = html;
+  content2.innerHTML = html;
+  
+  void wrapper.offsetWidth;
+  wrapper.classList.add('animate');
+}
+
+window.addEventListener('keydown', e => {
+  const key = e.key.toLowerCase();
+  if(key === 'l') fetchData();
+});
+
+// Carga inicial
+fetchData();
+</script>
+</body>
+</html>

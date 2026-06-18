@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eventos activos — AUA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .hero-title { font-family:'Cinzel Decorative',serif; font-size:clamp(30px,4vw,48px); color:var(--gold); margin-bottom:12px; }
+    .hero-sub { font-family:'Cinzel',serif; color:var(--muted); letter-spacing:1px; margin-bottom:22px; }
+    .event-grid { display:grid; gap:18px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); }
+    .event-card { background:var(--bg2); border:0.5px solid var(--brown); border-radius:14px; padding:22px; }
+    .event-card h2 { font-family:'Cinzel',serif; font-size:18px; margin-bottom:10px; color:var(--gold); }
+    .event-card p { color:var(--muted); line-height:1.6; margin:8px 0; font-size:13px; }
+    .event-badge { display:inline-flex; gap:6px; align-items:center; padding:6px 12px; border-radius:999px; font-size:11px; letter-spacing:0.5px; text-transform:uppercase; }
+    .badge-inscripcion { background:rgba(90,170,240,0.12); color:var(--host); border:1px solid rgba(90,170,240,0.2); }
+    .badge-jugando { background:rgba(160,80,20,0.12); color:var(--gold); border:1px solid rgba(232,200,122,0.2); }
+    .event-actions { margin-top:18px; display:flex; flex-wrap:wrap; gap:10px; }
+    .event-actions a { display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; padding:10px 16px; border-radius:8px; background:var(--gold); color:var(--bg0); font-weight:600; transition:transform 0.2s; }
+    .event-actions a:hover { transform:translateY(-1px); }
+    .empty-msg { padding:40px; text-align:center; color:var(--muted); background:var(--bg2); border:0.5px solid var(--brown); border-radius:12px; }
+  </style>
+</head>
+<body>
+<header>
+  <a class="header-logo" href="/">
+    <span class="logo-icon">⚔</span>
+    <span class="logo-text">AUA</span>
+  </a>
+  <nav>
+    <a class="active" href="/eventos">Eventos</a>
+    <a href="/torneos">Salón de la Fama</a>
+    <a href="/copa_stats">📊 Stats</a>
+  </nav>
+  <div class="header-actions">
+    <% if (user) { %>
+      <a href="/dashboard" class="nav-user" title="Ir al dashboard">
+        <% if (user.image) { %><img src="<%= user.image %>" alt="Avatar" class="nav-avatar" /><% } %>
+        <span><%= user.name %></span>
+      </a>
+      <form method="POST" action="/auth/logout" style="display:inline;margin:0">
+        <button type="submit" class="nav-logout-btn" title="Cerrar sesión">✕</button>
+      </form>
+    <% } else { %>
+      <a href="/auth/discord" class="nav-discord-btn"><i class="fab fa-discord"></i>Ingresar</a>
+    <% } %>
+  </div>
+</header>
+
+<section class="salon-hero fade-up">
+  <div class="salon-hero-title">Eventos activos</div>
+  <div class="salon-hero-sub">Encuentra torneos en inscripción o en curso y accede a su página dedicada.</div>
+</section>
+
+<section class="salon-wrap">
+  <% if (!activeTournaments || activeTournaments.length === 0) { %>
+    <div class="empty-msg">No hay torneos activos en este momento. Volvé más tarde o consultá el Salón de la Fama.</div>
+  <% } else { %>
+    <div class="event-grid">
+      <% activeTournaments.forEach(t => { %>
+        <article class="event-card">
+          <h2><%= t.nombre %></h2>
+          <div class="event-badge <%= t.estado === 'jugando' ? 'badge-jugando' : 'badge-inscripcion' %>"><%= t.estado === 'jugando' ? 'En curso' : 'Inscripción' %></div>
+          <p>Tipo: <strong><%= t.tipo %></strong></p>
+          <p>Formato: <strong><%= t.formato.replace(/_/g, ' ') %></strong></p>
+          <p>Inscripciones: <strong><%= t.inscriptos %></strong></p>
+          <p>ELO: <%= t.elo_min %> – <%= t.elo_max %></p>
+          <div class="event-actions">
+            <a href="/torneo/<%= t.slug %>">Ver torneo</a>
+            <a href="/penca/<%= t.slug %>">Ir a la penca</a>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<footer>
+  <div class="footer-logo">AUA</div>
+  <div class="footer-text">Asociación Uruguaya de Age of Empires II</div>
+</footer>
+</body>
+</html>

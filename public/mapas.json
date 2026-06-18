@@ -1,0 +1,20 @@
+{
+  "1": { "name": "Land Madness", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/land_madness.png","Categoria": "Abierto" },
+  "2": { "name": "Slopes", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/Slopes.png","Categoria": "Abierto" },
+  "3": { "name": "Dry River", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/Dry%20River.png","Categoria": "Abierto" },
+  "4": { "name": "Arabia", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/arabia.png","Categoria": " Semi Abierto" },
+  "5": { "name": "Valley", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/Valley.png","Categoria": " Semi Abierto" },
+  "6": { "name": "Enclosed", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/enclosed.png","Categoria": " Semi Abierto" },
+  "7": { "name": "Arena", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/arena.png" , "Categoria": "Cerrado" },
+  "8": { "name": "Hideout", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/Hideout.png" , "Categoria": "Cerrado"},
+  "9": { "name": "Quarry", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/Quarry.png", "Categoria": "Cerrado" },
+  "10": { "name": "Immersion", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/immersion.png", "Categoria": "Hibrido" },
+  "11": { "name": "High Tide", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/High%20Tide.png", "Categoria": "Hibrido" },
+  "12": { "name": "African River", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/African%20River.png", "Categoria": "Hibrido" },
+  "13": { "name": "Islands", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/Islas.png", "Categoria": "Agua" },
+  "14": { "name": "Comeer", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/Comeer.png", "Categoria": "Agua" },
+  "15": { "name": "Shorelines", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/shorelines.png", "Categoria": "Agua" },
+  "16": { "name": "Nomad", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/nomad.png", "Categoria": "Nomada" },
+  "17": { "name": "Pilgrims", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/Pilgrims.png", "Categoria": "Nomada" },
+  "18": { "name": "Stranded", "url": "https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/Mapas_2025/stranded.png", "Categoria": "Nomada" }
+}

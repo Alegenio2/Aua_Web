@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Draft Overlay — Copa Uruguaya 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── 1920x1080 fijo para OBS Browser Source ── */
+html, body {
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+}
+
+:root {
+    --gold:   #e8c87a;
+    --gold2:  #c8a040;
+    --bg:     rgba(10,6,2,0.93);
+    --bg2:    rgba(20,12,4,0.96);
+    --border: rgba(232,200,122,0.18);
+    --host:   #6aaae8;
+    --guest:  #e86a8a;
+    --win:    #a8c860;
+    --text:   #e8e0d0;
+    --dim:    #665544;
+}
+
+@keyframes fadeIn  { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+@keyframes shimmer { 0%,100%{opacity:.8} 50%{opacity:1} }
+
+/* ── Contenedor principal: franja superior, debajo de la barra de alertas ── */
+/* Ocupa el ancho completo, altura fija para no tapar la cámara del centro  */
+.overlay-wrap {
+    position: absolute;
+    top: 44px;          /* debajo de la barra de alertas */
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 10px;
+    animation: fadeIn .45s ease both;
+    /* Máximo hasta y≈390 para no tapar la cámara centrada */
+    overflow: hidden;
+}
+
+/* Header */
+.ov-header {
+    background:var(--bg); border:0.5px solid var(--border); border-radius:8px;
+    padding:5px 16px; display:flex; align-items:center; justify-content:space-between;
+}
+.ov-title  { font-family:'Cinzel',serif; font-size:11px; color:var(--gold2); letter-spacing:3px; text-transform:uppercase; animation:shimmer 3s infinite; }
+.ov-players{ display:flex; gap:8px; align-items:center; font-size:13px; }
+.ov-host   { color:var(--host);  font-weight:600; }
+.ov-guest  { color:var(--guest); font-weight:600; }
+.ov-vs     { color:var(--dim); font-size:10px; letter-spacing:2px; }
+
+/* Bloques civs y mapas en dos columnas lado a lado para aprovechar el ancho */
+.ov-blocks-row {
+    display: grid;
+    gap: 120px;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Bloque */
+.ov-block {border:0.5px solid var(--border); border-radius:8px; padding:8px 12px; }
+.ov-block-title { font-size:20px; color:var(--dim); letter-spacing:2px; text-transform:uppercase; margin-bottom:7px; padding-bottom:5px; border-bottom:0.5px solid rgba(232,200,122,0.1); }
+
+/* 3 columnas */
+.three-cols { display:grid; grid-template-columns:1fr 1.1fr 1fr; gap:6px; }
+.col-wrap   { display:flex; flex-direction:column; gap:4px; }
+
+.col-label { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; padding:2px 7px; border-radius:3px; display:inline-block; margin-bottom:3px; }
+.lbl-host    { color:var(--host);  background:rgba(106,170,232,.1);  border:0.5px solid rgba(106,170,232,.25); }
+.lbl-guest   { color:var(--guest); background:rgba(232,106,138,.1);  border:0.5px solid rgba(232,106,138,.25); }
+.lbl-neutral { color:var(--gold);  background:rgba(232,200,122,.08); border:0.5px solid rgba(232,200,122,.2);  }
+.lbl-ban     { color:#c07070; background:rgba(180,40,40,.1); border:0.5px solid rgba(180,40,40,.25); margin-top:5px; }
+
+/* Civs flex */
+.civs-flex { display:flex; flex-wrap:wrap; gap:5px; }
+
+/* Civ card circular */
+.civ-card {
+    position:relative; width:62px; height:62px; border-radius:50%;
+    border:2px solid rgba(232,200,122,0.15); background:var(--bg2);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden; flex-shrink:0; transition:transform 0.18s;
+}
+.civ-card:hover { transform:scale(1.06); }
+.civ-img  { width:46px; height:46px; object-fit:cover; border-radius:50%; }
+.civ-name {
+    position:absolute; bottom:2px; left:50%; transform:translateX(-50%);
+    font-size:7px; font-weight:600; color:var(--text); white-space:nowrap;
+    background:rgba(8,5,2,.85); padding:1px 4px; border-radius:3px;
+}
+
+/* Estados civs */
+.civ-pick-host  { border-color:var(--host)  !important; box-shadow:0 0 8px rgba(106,170,232,.2); }
+.civ-pick-guest { border-color:var(--guest) !important; box-shadow:0 0 8px rgba(232,106,138,.2); }
+.civ-snipe      { border-color:#c8a040 !important; box-shadow:0 0 8px rgba(200,160,64,.2); }
+
+.civ-ban-card { border-color:rgba(160,40,40,.5) !important; }
+.civ-ban-card .civ-img  { filter:grayscale(85%) brightness(.5); }
+.civ-ban-card .civ-name { color:#886666;}
+.civ-ban-card::after {
+    content:''; position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%) rotate(45deg);
+    width:2px; height:68%; background:rgba(200,60,60,.65);
+    border-radius:2px; pointer-events:none;
+}
+
+.civ-won { border-color:var(--win) !important; box-shadow:0 0 10px rgba(168,200,96,.3); }
+.civ-won .civ-img { filter:brightness(1.1); }
+
+.status-image {
+    position:absolute; left:50%; transform:translateX(-50%);
+    width:100px; height:45px; z-index:2;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,.8));
+}
+
+/* Map card */
+.map-card {
+    position:relative; width:76px; height:92px; border-radius:7px;
+    border:0.5px solid rgba(232,200,122,.12); background:var(--bg2);
+    display:flex; align-items:flex-end; justify-content:center;
+    overflow:hidden; flex-shrink:0; transition:transform 0.18s, border-color 0.18s;
+}
+.map-card:hover { transform:translateY(-2px); border-color:var(--gold2); }
+.map-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.7; border-radius:7px; }
+.map-card::after { content:''; position:absolute; inset:0; background:linear-gradient(to bottom,transparent 30%,rgba(8,5,2,.9) 100%); border-radius:7px; pointer-events:none; }
+.map-name { position:relative; z-index:2; font-size:9px; font-weight:600; color:var(--text); padding:0 5px 6px; text-align:center; line-height:1.2; }
+
+.map-badge {
+    position:absolute; top:5px; left:50%; transform:translateX(-50%);
+    z-index:3; font-size:8px; font-weight:700; letter-spacing:1.5px;
+    padding:2px 6px; border-radius:3px; font-family:'Inter',sans-serif; white-space:nowrap;
+}
+.mbadge-host  { color:var(--host);  background:rgba(20,60,120,.7); }
+.mbadge-guest { color:var(--guest); background:rgba(120,20,60,.7); }
+.mbadge-ban   { color:#e07070; background:rgba(120,20,20,.7); }
+
+.map-ban .map-img  { filter:grayscale(80%) sepia(30%); opacity:.3; }
+.map-ban .map-name { color:#886666; }
+.map-ban-neutral { border-color:rgba(160,40,40,.4) !important; }
+
+.maps-flex { display:flex; flex-wrap:wrap; gap:7px; }
+
+/* Firma */
+.ov-firma { text-align:right; font-size:8px; color:rgba(100,80,50,.35); letter-spacing:1px; padding-top:3px; padding-right:4px; }
+</style>
+</head>
+<body>
+
+<div class="overlay-wrap">
+
+    <!-- Header -->
+    <div class="ov-header">
+        <div class="ov-title">⚔ Copa Uruguaya 2026 — Draft</div>
+        <div class="ov-players">
+            <span class="ov-host"  id="hdrHost">Host</span>
+            <span class="ov-vs">VS</span>
+            <span class="ov-guest" id="hdrGuest">Guest</span>
+        </div>
+    </div>
+
+    <!-- CIVS + MAPAS en dos columnas lado a lado -->
+    <div class="ov-blocks-row">
+
+        <!-- CIVS (columna izquierda, más ancha) -->
+        <div class="ov-block">
+            <div class="ov-block-title">🛡 Civilizaciones</div>
+            <div class="three-cols">
+                <div class="col-wrap">
+                    <span class="col-label lbl-host" id="lblHostCivPicks">Host Picks</span>
+                    <div class="civs-flex" id="ov-host-picks"></div>
+                    <span class="col-label lbl-ban" id="lblHostCivBans">Host Bans</span>
+                    <div class="civs-flex" id="ov-host-bans"></div>
+                </div>
+                <div class="col-wrap" style="align-items:center">
+                    <span class="col-label lbl-neutral">Neutrales</span>
+                    <div class="civs-flex" id="ov-neutral-civs" style="justify-content:center"></div>
+                    <span class="col-label lbl-ban">Bans Globales</span>
+                    <div class="civs-flex" id="ov-global-bans" style="justify-content:center"></div>
+                </div>
+                <div class="col-wrap">
+                    <span class="col-label lbl-guest" id="lblGuestCivPicks">Guest Picks</span>
+                    <div class="civs-flex" id="ov-guest-picks"></div>
+                    <span class="col-label lbl-ban" id="lblGuestCivBans">Guest Bans</span>
+                    <div class="civs-flex" id="ov-guest-bans"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAPAS (columna derecha, más angosta) -->
+        <div class="ov-block">
+            <div class="ov-block-title">🗺 Mapas</div>
+            <div class="three-cols">
+                <div class="col-wrap">
+                    <span class="col-label lbl-host" id="lblHostMaps">Host</span>
+                    <div class="maps-flex" id="ov-host-maps"></div>
+                </div>
+                <div class="col-wrap" style="align-items:center">
+                    <span class="col-label lbl-neutral">Neutrales</span>
+                    <div class="maps-flex" id="ov-neutral-maps" style="justify-content:center"></div>
+                </div>
+                <div class="col-wrap">
+                    <span class="col-label lbl-guest" id="lblGuestMaps">Guest</span>
+                    <div class="maps-flex" id="ov-guest-maps"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="ov-firma" style="position:absolute;bottom:6px;right:14px">Diseñado por JabsUY · AUA 2026</div>
+</div>
+
+<script>
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Config GitHub ─────────────────────────────────────────────────────────
+const DRAFT_STATE_URL = window.location.origin + '/api/overlay/draft';
+
+// Estado en memoria — se llena desde GitHub, fallback a localStorage
+let _state = {};
+
+function getCivDetails()  { return JSON.parse(localStorage.getItem('civilizations') || '[]'); }
+function getCivsData()    { return _state.civsData    || JSON.parse(localStorage.getItem('civsData')    || '[]'); }
+function getNeutralCivs() { return _state.neutralCivs || JSON.parse(localStorage.getItem('neutralCivs') || '[]'); }
+function getMapasData()   { return _state.mapasData   || JSON.parse(localStorage.getItem('mapasData')   || '[]'); }
+function getDraftNames()  { return _state.draftNames  || JSON.parse(localStorage.getItem('draftNames')  || '{}'); }
+function isCivSwapped()   { return _state.civSwapped  ?? (localStorage.getItem('civSwapped') === 'true'); }
+function isMapSwapped()   { return _state.mapSwapped  ?? (localStorage.getItem('mapSwapped') === 'true'); }
+
+// Resuelve el player real aplicando swap
+// player viene en mayúsculas: "HOST", "GUEST", "NONE"
+function resolvePlayer(player, swapped) {
+    if (player === 'NONE') return 'NONE';
+    if (!swapped) return player;
+    return player === 'HOST' ? 'GUEST' : 'HOST';
+}
+
+// ─── Nombres ─────────────────────────────────────────────────────────────────
+function getNombres() {
+    const n  = getDraftNames();
+    const cs = isCivSwapped();
+    const ms = isMapSwapped();
+
+    // Tomar nombres del civsData si están disponibles (los del draft de aoe2cm)
+    const civsData  = getCivsData();
+    const draftHost  = civsData.hostName  || '';
+    const draftGuest = civsData.guestName || '';
+
+    // Prioridad: nombre manual > nombre del draft
+    const civHost  = cs ? (n.civGuest || draftGuest || 'Guest') : (n.civHost  || draftHost  || 'Host');
+    const civGuest = cs ? (n.civHost  || draftHost  || 'Host')  : (n.civGuest || draftGuest || 'Guest');
+    const mapHost  = ms ? (n.mapGuest || draftGuest || 'Guest') : (n.mapHost  || draftHost  || 'Host');
+    const mapGuest = ms ? (n.mapHost  || draftHost  || 'Host')  : (n.mapGuest || draftGuest || 'Guest');
+
+    return { civHost, civGuest, mapHost, mapGuest };
+}
+
+// ─── Render civ card ──────────────────────────────────────────────────────────
+function buildCivCard(civ, extraClass) {
+    const details  = getCivDetails();
+    const detail   = details.find(d => d.id === civ.name);
+
+    const el       = document.createElement('div');
+    el.className   = `civ-card ${extraClass}`;
+
+    const img      = document.createElement('img');
+    img.className  = 'civ-img';
+    img.src        = detail ? detail.imagen : '';
+    img.alt        = detail ? detail.nombre : civ.name;
+    img.onerror    = () => img.style.display = 'none';
+
+    const name     = document.createElement('div');
+    name.className = 'civ-name';
+    name.textContent = detail ? detail.nombre : civ.name;
+
+    if (civ.won) {
+        const w = document.createElement('img');
+        w.src = 'img/gano.svg'; w.className = 'status-image'; w.alt = 'W';
+        el.appendChild(w);
+        el.classList.add('civ-won');
+    }
+    if (civ.lost) {
+        const l = document.createElement('img');
+        l.src = 'img/perdio.svg'; l.className = 'status-image'; l.alt = 'L';
+        el.appendChild(l);
+    }
+    if (civ.actionType === 'snipe') {
+        const s = document.createElement('img');
+        s.src = 'img/snipe.svg'; s.className = 'status-image'; s.alt = 'Snipe';
+        el.appendChild(s);
+    }
+
+    el.appendChild(img);
+    el.appendChild(name);
+    return el;
+}
+
+// ─── Render map card ──────────────────────────────────────────────────────────
+function buildMapCard(map, badgeClass, badgeText, extraClass) {
+    const el       = document.createElement('div');
+    el.className   = `map-card ${extraClass || ''}`;
+
+    const img      = document.createElement('img');
+    img.className  = 'map-img';
+    img.src        = map.imageUrl || '';
+    img.alt        = map.name || '';
+    img.onerror    = () => img.style.display = 'none';
+
+    if (badgeText) {
+        const badge       = document.createElement('div');
+        badge.className   = `map-badge ${badgeClass}`;
+        badge.textContent = badgeText;
+        el.appendChild(badge);
+    }
+
+    const nameEl       = document.createElement('div');
+    nameEl.className   = 'map-name';
+    nameEl.textContent = map.name || '';
+
+    if (map.won) {
+        const w = document.createElement('img');
+        w.src = 'img/gano1.png'; w.className = 'status-image'; w.alt = 'W';
+        el.appendChild(w);
+    }
+    if (map.lost) {
+        const l = document.createElement('img');
+        l.src = 'img/gano2.png'; l.className = 'status-image'; l.alt = 'L';
+        el.appendChild(l);
+    }
+
+    el.appendChild(img);
+    el.appendChild(nameEl);
+    return el;
+}
+
+// ─── Render principal ─────────────────────────────────────────────────────────
+function render() {
+    const cs     = isCivSwapped();
+    const ms     = isMapSwapped();
+    const nombres = getNombres();
+
+    // Actualizar labels
+    document.getElementById('hdrHost').textContent           = nombres.civHost;
+    document.getElementById('hdrGuest').textContent          = nombres.civGuest;
+    document.getElementById('lblHostCivPicks').textContent   = nombres.civHost  + ' Picks';
+    document.getElementById('lblHostCivBans').textContent    = nombres.civHost  + ' Bans';
+    document.getElementById('lblGuestCivPicks').textContent  = nombres.civGuest + ' Picks';
+    document.getElementById('lblGuestCivBans').textContent   = nombres.civGuest + ' Bans';
+    document.getElementById('lblHostMaps').textContent       = nombres.mapHost;
+    document.getElementById('lblGuestMaps').textContent      = nombres.mapGuest;
+
+    // ── CIVS ─────────────────────────────────────────────────────────────────
+    const civContainers = {
+        hostPicks:   document.getElementById('ov-host-picks'),
+        hostBans:    document.getElementById('ov-host-bans'),
+        neutral:     document.getElementById('ov-neutral-civs'),
+        globalBans:  document.getElementById('ov-global-bans'),
+        guestPicks:  document.getElementById('ov-guest-picks'),
+        guestBans:   document.getElementById('ov-guest-bans'),
+    };
+    Object.values(civContainers).forEach(c => c.innerHTML = '');
+
+    // ── neutralCivs: bans globales (player=NONE) guardados por el admindraft ──
+    const neutralCivs = getNeutralCivs();
+    neutralCivs.forEach(civ => {
+        // neutralCivs siempre son NONE — van a globalBans si es ban, a neutral si es pick
+        if (civ.actionType === 'ban' || civ.actionType === 'snipe') {
+            civContainers.globalBans.appendChild(buildCivCard(civ, 'civ-ban-card'));
+        } else {
+            civContainers.neutral.appendChild(buildCivCard(civ, ''));
+        }
+    });
+
+    // ── civsData: picks y bans de HOST y GUEST ────────────────────────────────
+    const civsRaw  = getCivsData();
+    const civsList = Array.isArray(civsRaw) ? civsRaw : [];
+
+    civsList.forEach(civ => {
+        // civsData puede tener NONE también (bans globales del draft más viejo)
+        // pero preferimos los de neutralCivs — los saltamos si ya están en neutral
+        const player = resolvePlayer(civ.player, cs);
+
+        if (player === 'NONE') {
+            // Solo los agregamos si no están ya en neutralCivs
+            const yaEsta = neutralCivs.find(n => n.name === civ.name);
+            if (!yaEsta) {
+                if (civ.actionType === 'ban' || civ.actionType === 'snipe') {
+                    civContainers.globalBans.appendChild(buildCivCard(civ, 'civ-ban-card'));
+                } else {
+                    civContainers.neutral.appendChild(buildCivCard(civ, ''));
+                }
+            }
+        } else if (player === 'HOST') {
+            if (civ.actionType === 'pick') {
+                civContainers.hostPicks.appendChild(buildCivCard(civ, 'civ-pick-host'));
+            } else if (civ.actionType === 'snipe') {
+                civContainers.hostBans.appendChild(buildCivCard(civ, 'civ-snipe'));
+            } else {
+                civContainers.hostBans.appendChild(buildCivCard(civ, 'civ-ban-card'));
+            }
+        } else if (player === 'GUEST') {
+            if (civ.actionType === 'pick') {
+                civContainers.guestPicks.appendChild(buildCivCard(civ, 'civ-pick-guest'));
+            } else if (civ.actionType === 'snipe') {
+                civContainers.guestBans.appendChild(buildCivCard(civ, 'civ-snipe'));
+            } else {
+                civContainers.guestBans.appendChild(buildCivCard(civ, 'civ-ban-card'));
+            }
+        }
+    });
+
+    // ── MAPAS ─────────────────────────────────────────────────────────────────
+    document.getElementById('ov-host-maps').innerHTML    = '';
+    document.getElementById('ov-neutral-maps').innerHTML = '';
+    document.getElementById('ov-guest-maps').innerHTML   = '';
+
+    const mapsList = getMapasData();
+    if (!Array.isArray(mapsList)) return;
+
+    mapsList.forEach(map => {
+        const player = resolvePlayer(map.player, ms);
+        const isBan  = map.actionType === 'ban';
+
+        if (player === 'NONE') {
+            // Mapa neutral: bans van al centro con badge BAN
+            const card = buildMapCard(map,
+                isBan ? 'mbadge-ban' : '',
+                isBan ? 'BAN' : '',
+                isBan ? 'map-ban map-ban-neutral' : ''
+            );
+            document.getElementById('ov-neutral-maps').appendChild(card);
+        } else if (player === 'HOST') {
+            const card = buildMapCard(map,
+                isBan ? 'mbadge-ban' : 'mbadge-host',
+                isBan ? 'BAN' : nombres.mapHost,
+                isBan ? 'map-ban' : ''
+            );
+            document.getElementById('ov-host-maps').appendChild(card);
+        } else if (player === 'GUEST') {
+            const card = buildMapCard(map,
+                isBan ? 'mbadge-ban' : 'mbadge-guest',
+                isBan ? 'BAN' : nombres.mapGuest,
+                isBan ? 'map-ban' : ''
+            );
+            document.getElementById('ov-guest-maps').appendChild(card);
+        }
+    });
+}
+
+// ─── Cargar civs.json si no está en cache ────────────────────────────────────
+async function asegurarCivDetails() {
+    if (!localStorage.getItem('civilizations')) {
+        try {
+            const res  = await fetch('https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/civs.json');
+            const data = await res.json();
+            localStorage.setItem('civilizations', JSON.stringify(data));
+        } catch(e) { console.error('Error cargando civs:', e); }
+    }
+}
+
+// ─── WebSocket (instantáneo) + polling fallback ──────────────────────────────
+const WS_SERVER = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host;
+let lastTs      = null;
+let wsConnected = false;
+
+function aplicarState(data) {
+    if (data.ts !== lastTs) {
+        lastTs  = data.ts;
+        _state  = data;
+        render();
+        console.log('[draftoverlay] actualizado ts=' + data.ts);
+    }
+}
+
+function conectarWS() {
+    try {
+        const ws = new WebSocket(WS_SERVER + '/ws?canal=draft');
+        ws.onopen    = () => { wsConnected = true; console.log('[WS] conectado'); };
+        ws.onmessage = e => { try { aplicarState(JSON.parse(e.data)); } catch(err) {} };
+        ws.onclose   = () => { wsConnected = false; console.log('[WS] desconectado — reintentando en 5s'); setTimeout(conectarWS, 5000); };
+        ws.onerror   = () => ws.close();
+    } catch(e) {}
+}
+
+async function pollFallback() {
+    if (wsConnected) return;
+    try {
+        const res = await fetch(DRAFT_STATE_URL + '?t=' + Date.now());
+        if (!res.ok) return;
+        aplicarState(await res.json());
+    } catch(e) {}
+}
+
+window.addEventListener('storage', e => {
+    if (['civsData','neutralCivs','mapasData','civSwapped','mapSwapped','draftNames'].includes(e.key)) {
+        _state = {}; render();
+    }
+});
+
+asegurarCivDetails().then(() => {
+    render();
+    conectarWS();
+    pollFallback();
+    setInterval(pollFallback, 3000);
+});
+</script>
+</body>
+</html>

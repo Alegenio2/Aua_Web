@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control Penca — AUA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'; this.onload=null;" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" href="/img/favicon-32x32.png" type="image/png" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚔</div>
+      <div class="brand-text">Centro de<br>Mando</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-label">Admin</div>
+      <a href="/admin" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L2 3v5c0 3.5 2.5 6.5 6 7.5C14 14.5 14 11 14 8V3L8 1z"/></svg>
+        Panel General
+      </a>
+      <a href="/admin/resultados" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v12H2V2zm1 1v10h10V3H3zm2 2h6v1H5V5zm0 2h6v1H5V7zm0 2h4v1H5V9z"/></svg>
+        Resultados
+      </a>
+      <a href="/admin/penca" class="nav-item active">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M3 1h10v4c0 2.76-2.24 5-5 5S3 7.76 3 5V1zm-2 1v3a3 3 0 003 3v1H3v1h10v-1H9V8a3 3 0 003-3V2H5zm6 9H7v1H5v1h6v-1H9v-1z"/></svg>
+        Control Penca
+      </a>
+      <div class="nav-label" style="margin-top:8px">Navegación</div>
+      <a href="/dashboard" class="nav-item">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 7h2v7h4v-4h2v4h4V7h2L8 1z"/></svg>
+        Mi Dashboard
+      </a>
+    </div>
+    <div class="sidebar-user">
+      <img src="<%= user.image %>" alt="Avatar" class="user-avatar" />
+      <span class="user-name"><%= user.name %></span>
+      <a href="/auth/logout" style="color:#884444" title="Cerrar sesión">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M6 2H2v12h4v-1H3V3h3V2zm5 3l-1 1 2 2H5v1h7l-2 2 1 1 4-4-4-3z"/></svg>
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-title">Control de Penca</div>
+
+    <% if (flash) { %><div class="alert alert-ok"><%= flash %></div><% } %>
+    <% if (error) { %><div class="alert alert-err"><%= error %></div><% } %>
+
+    <% if (!torneosConPartidos || torneosConPartidos.length === 0) { %>
+    <div class="empty-msg">No hay torneos en estado "jugando" actualmente.</div>
+    <% } else { %>
+
+    <% torneosConPartidos.forEach(torneo => { %>
+    <div style="margin-bottom:32px">
+      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);border-bottom:0.5px solid var(--brown);padding-bottom:8px;margin-bottom:12px;letter-spacing:.05em">
+        <%= torneo.nombre %>
+      </div>
+
+      <%
+        const labelPenca = torneo.estadoPenca === 'abierta_admin' ? { txt: 'Abierta (manual)', color: '#22c55e', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.3)' }
+          : torneo.estadoPenca === 'cerrada_admin' ? { txt: 'Cerrada (manual)', color: '#cc5555', bg: 'rgba(200,60,60,0.08)', border: 'rgba(200,60,60,0.3)' }
+          : torneo.estadoPenca === 'cerrada_auto'  ? { txt: 'Cerrada (auto)',   color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.3)' }
+          : { txt: 'Abierta (auto)', color: '#22c55e', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.3)' };
+      %>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:<%= labelPenca.bg %>;border:0.5px solid <%= labelPenca.border %>;margin-bottom:16px">
+        <span style="font-size:12px;color:<%= labelPenca.color %>;font-weight:600;flex:1">
+          <i class="fas fa-circle" style="font-size:8px;margin-right:6px"></i><%= labelPenca.txt %>
+        </span>
+        <form method="POST" action="/admin/penca/toggle" style="display:flex;gap:8px;margin:0">
+          <input type="hidden" name="torneo_id" value="<%= torneo.id %>" />
+          <% if (torneo.estadoPenca !== 'abierta_admin') { %>
+          <button type="submit" name="accion" value="abrir" style="padding:6px 14px;font-size:12px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.5);color:#22c55e;border-radius:6px;cursor:pointer;font-weight:600">
+            <i class="fas fa-unlock" style="margin-right:5px"></i>Abrir
+          </button>
+          <% } %>
+          <% if (torneo.estadoPenca !== 'cerrada_admin') { %>
+          <button type="submit" name="accion" value="cerrar" style="padding:6px 14px;font-size:12px;background:rgba(200,60,60,0.12);border:1px solid rgba(200,60,60,0.4);color:#cc5555;border-radius:6px;cursor:pointer;font-weight:600">
+            <i class="fas fa-lock" style="margin-right:5px"></i>Cerrar
+          </button>
+          <% } %>
+          <% if (torneo.penca_abierta !== null) { %>
+          <button type="submit" name="accion" value="auto" style="padding:6px 14px;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid var(--brown);color:var(--dim);border-radius:6px;cursor:pointer">
+            Auto
+          </button>
+          <% } %>
+        </form>
+      </div>
+
+      <!-- Definir Campeón -->
+      <% if (torneo.participantes && torneo.participantes.length > 0) { %>
+      <div style="margin-bottom:16px;padding:14px 16px;background:rgba(232,200,122,0.04);border:0.5px solid rgba(232,200,122,0.2);border-radius:8px">
+        <div style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">
+          <i class="fas fa-crown" style="margin-right:6px"></i>Definir Campeón
+          <% if (torneo.campeon_id) { %>
+          <span style="color:var(--win);margin-left:8px;font-size:10px">
+            <i class="fas fa-check" style="margin-right:3px"></i>Ya definido
+          </span>
+          <% } %>
+        </div>
+        <form method="POST" action="/admin/penca/definir-campeon" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input type="hidden" name="torneo_id" value="<%= torneo.id %>" />
+          <select name="campeon_id" style="flex:1;min-width:160px;padding:8px 12px;background:var(--bg3);border:0.5px solid var(--brown);border-radius:7px;color:var(--text);font-size:12px;outline:none">
+            <option value="">Seleccionar <%= torneo.esEquipo ? 'equipo' : 'jugador' %> campeón...</option>
+            <% torneo.participantes.forEach(p => { %>
+            <option value="<%= p.id %>" <%= torneo.campeon_id === p.id ? 'selected' : '' %>><%= p.nombre %></option>
+            <% }) %>
+          </select>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <label style="font-size:11px;color:var(--dim)">Bonus pts:</label>
+            <input type="number" name="puntos_bonus" value="5" min="1" max="20"
+              style="width:54px;padding:7px 8px;background:var(--bg3);border:0.5px solid var(--brown);border-radius:6px;color:var(--gold);font-size:13px;font-weight:700;text-align:center;outline:none" />
+          </div>
+          <button type="submit" style="padding:7px 16px;font-size:12px;font-weight:600;background:rgba(232,200,122,0.12);border:1px solid rgba(232,200,122,0.4);color:var(--gold);border-radius:6px;cursor:pointer;white-space:nowrap">
+            <i class="fas fa-crown" style="margin-right:5px"></i>Confirmar campeón
+          </button>
+        </form>
+      </div>
+      <% } %>
+
+      <% if (torneo.partidos.length === 0) { %>
+      <div class="empty-msg" style="padding:20px 0;font-family:'Inter';font-size:13px;color:var(--dim)">
+        No hay partidos pendientes en este torneo.
+      </div>
+      <% } else { %>
+      <% torneo.partidos.forEach(p => { %>
+      <div class="partido-card">
+        <form method="POST" action="/api/partidos/penca" class="partido-form">
+          <input type="hidden" name="partidoId" value="<%= p.id %>" />
+
+          <div class="partido-info">
+            <strong><%= p.j1 %> vs <%= p.j2 %></strong>
+            <div class="round">Ronda <%= p.ronda %></div>
+          </div>
+
+          <div class="score-group">
+            <input type="number" name="score1" placeholder="0" min="0" class="score-input" />
+            <span class="score-sep">–</span>
+            <input type="number" name="score2" placeholder="0" min="0" class="score-input" />
+          </div>
+
+          <div class="check-group">
+            <input type="checkbox" name="cuenta_penca" value="1" id="cp-<%= p.id %>" checked />
+            <label for="cp-<%= p.id %>">Suma puntos</label>
+          </div>
+
+          <button type="submit" class="btn-save">Guardar resultado</button>
+        </form>
+      </div>
+      <% }) %>
+      <% } %>
+    </div>
+    <% }) %>
+
+    <% } %>
+  </main>
+</div>
+</body>
+</html>

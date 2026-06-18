@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — AUA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" href="/img/favicon-32x32.png" type="image/png" />
+  <style>
+    .notfound-wrap {
+      min-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 16px;
+      padding: 60px 20px;
+    }
+    .notfound-code {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(64px, 12vw, 120px);
+      color: var(--gold);
+      line-height: 1;
+      opacity: 0.85;
+    }
+    .notfound-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem;
+      color: var(--text);
+      letter-spacing: 2px;
+    }
+    .notfound-msg {
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 400px;
+    }
+    .notfound-back {
+      margin-top: 8px;
+      display: inline-block;
+      padding: 10px 28px;
+      border: 1px solid rgba(232,200,122,0.4);
+      border-radius: 6px;
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .notfound-back:hover { background: rgba(232,200,122,0.08); }
+  </style>
+</head>
+<body>
+  <div class="notfound-wrap">
+    <div class="notfound-code">404</div>
+    <div class="notfound-title">Página no encontrada</div>
+    <div class="notfound-msg"><%= message || 'La página que buscás no existe o fue movida.' %></div>
+    <a href="/" class="notfound-back">Volver al inicio</a>
+  </div>
+</body>
+</html>

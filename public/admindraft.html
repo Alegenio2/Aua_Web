@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrador de Drafts — Copa Uruguaya 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <style>
+:root {
+    --gold:#e8c87a; --gold2:#c8a040; --gold-dim:rgba(232,200,122,0.12);
+    --bg0:#0a0a0a; --bg1:#111008; --bg2:#1a1208; --bg3:#22180a;
+    --brown:#3a2a1a; --brown-dim:#2a1a0a; --text:#e8e0d0; --muted:#a09070; --dim:#665544;
+    --host:#6aaae8; --host-bg:rgba(74,138,220,0.1); --host-dim:rgba(74,138,220,0.22);
+    --guest:#e86a8a; --guest-bg:rgba(220,74,106,0.1); --guest-dim:rgba(220,74,106,0.22);
+    --win:#a8c860; --ban-border:#7a2020; --pick-border:#3a7a3a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{overflow-y:scroll!important;scrollbar-width:thin;scrollbar-color:#3a2a1a #0a0a0a}
+body{font-family:'Inter','Arial',sans-serif;background-color:var(--bg0);color:var(--text);min-height:100vh;overflow-y:visible!important}
+.draft-header{background:linear-gradient(180deg,#1a0a00,var(--bg1));border-bottom:1px solid var(--brown);padding:20px 24px}
+.draft-header-inner{display:flex;align-items:center;gap:16px;max-width:1200px;margin:0 auto}
+.draft-logo{font-size:28px;color:var(--gold)}
+.draft-header h1{font-family:'Cinzel',serif;font-size:20px;color:var(--gold);letter-spacing:2px;text-transform:uppercase}
+.draft-subtitle{font-size:12px;color:var(--dim);letter-spacing:1px;margin-top:2px}
+.btn-admindraft{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:8px;background:#1a1208;border:1px solid #e8c87a;color:#e8c87a;font-size:12px;font-weight:600;font-family:'Cinzel',serif;letter-spacing:1px;cursor:pointer;text-decoration:none;transition:all 0.18s;margin-left:auto}
+.btn-admindraft:hover{background:#2a1a08;box-shadow:0 0 14px rgba(232,200,122,.25)}
+.draft-main{max-width:1200px;margin:0 auto;padding:24px 20px}
+.players-bar{display:flex;align-items:center;gap:16px;margin-bottom:20px;background:var(--bg2);border:0.5px solid var(--brown);border-radius:10px;padding:14px 22px}
+.player-card{flex:1;padding:10px 16px;border-radius:8px}
+.player-card.host{background:var(--host-bg);border:0.5px solid var(--host-dim)}
+.player-card.guest{background:var(--guest-bg);border:0.5px solid var(--guest-dim);text-align:right}
+.player-role{font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.player-card.host .player-role{color:var(--host)}
+.player-card.guest .player-role{color:var(--guest)}
+.player-name{font-family:'Cinzel',serif;font-size:18px;color:var(--text)}
+.vs-badge{font-family:'Cinzel',serif;font-size:20px;color:var(--brown);letter-spacing:4px;min-width:60px;text-align:center}
+.inputs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.input-block{background:var(--bg2);border:0.5px solid var(--brown);border-radius:8px;padding:14px 16px}
+.input-block>label{display:block;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.input-row{display:flex;gap:8px}
+.input-row input,input[type="text"]{flex:1;background:var(--bg0);border:0.5px solid var(--brown);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
+.input-row input:focus,input[type="text"]:focus{border-color:var(--gold2)}
+.input-row input::placeholder,input[type="text"]::placeholder{color:var(--brown)}
+.input-row button,button{background:var(--bg3);border:0.5px solid var(--brown);border-radius:6px;color:var(--gold);font-size:12px;font-weight:600;font-family:'Inter',sans-serif;padding:8px 16px;cursor:pointer;transition:all 0.18s;white-space:nowrap}
+.input-row button:hover,button:hover{background:var(--brown);border-color:var(--gold2)}
+.swap-row{display:flex;align-items:center;gap:8px;margin-top:10px;padding:9px 12px;background:var(--bg3);border:0.5px solid var(--brown-dim);border-radius:7px;flex-wrap:wrap}
+.swap-label{font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;min-width:40px}
+.name-inputs{display:flex;gap:8px;flex:1;min-width:0}
+.name-field{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+.name-field label,.lbl-host,.lbl-guest{font-size:10px;letter-spacing:1px;white-space:nowrap}
+.lbl-host{color:var(--host)} .lbl-guest{color:var(--guest)}
+.name-field input{flex:1;min-width:0;background:var(--bg0);border:0.5px solid var(--brown-dim);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;font-family:'Inter',sans-serif;outline:none}
+.name-field input:focus{border-color:var(--gold2)}
+.swap-btn{padding:5px 12px!important;font-size:12px!important;background:var(--bg2)!important;border:0.5px solid var(--brown)!important;color:var(--gold)!important;border-radius:5px!important;cursor:pointer;transition:all 0.18s;white-space:nowrap}
+.swap-btn:hover{background:var(--brown)!important;border-color:var(--gold2)!important}
+.swap-badge{font-size:9px;padding:2px 8px;border-radius:10px;letter-spacing:1px;background:rgba(232,200,122,0.08);border:0.5px solid rgba(232,200,122,0.25);color:var(--gold2);display:none;white-space:nowrap}
+.swap-badge.visible{display:inline-block}
+.civ-status-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.civ-status-row label{margin:0}
+.badge-req{font-size:9px;padding:2px 8px;border-radius:10px;letter-spacing:1px;background:rgba(180,40,40,0.12);border:0.5px solid rgba(180,40,40,0.35);color:#c07070;white-space:nowrap}
+.badge-ok{font-size:9px;padding:2px 8px;border-radius:10px;letter-spacing:1px;background:rgba(100,160,40,0.12);border:0.5px solid rgba(100,160,40,0.35);color:#a8c860;display:none;white-space:nowrap}
+.badge-ok.visible{display:inline-block}
+.map-mode-row{display:flex;gap:6px;margin-bottom:8px}
+.map-mode-btn{flex:1;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;border:0.5px solid var(--brown-dim);background:var(--bg0);color:var(--dim);transition:all 0.18s}
+.map-mode-btn.active{background:var(--bg2);border-color:var(--gold2);color:var(--gold)}
+.single-map-preview{display:none;align-items:center;gap:8px;margin-top:8px;padding:7px 10px;background:var(--bg0);border:0.5px solid var(--pick-border);border-radius:6px;font-size:12px;color:var(--win)}
+.single-map-preview.visible{display:flex}
+.single-map-img{width:54px;height:34px;border-radius:4px;object-fit:cover;border:0.5px solid var(--brown);flex-shrink:0;background:var(--bg2)}
+.draft-section{margin-bottom:28px}
+.section-title{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:0.5px solid var(--brown)}
+h2{color:var(--gold);font-family:'Cinzel',serif} h3{display:none}
+.col-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;padding:4px 10px;border-radius:4px;display:inline-block}
+.host-label{color:var(--host);background:var(--host-bg);border:0.5px solid var(--host-dim)}
+.guest-label{color:var(--guest);background:var(--guest-bg);border:0.5px solid var(--guest-dim)}
+.neutral-label{color:var(--gold);background:var(--gold-dim);border:0.5px solid rgba(232,200,122,0.25)}
+.maps-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.maps-col{display:flex;flex-direction:column}
+.civs-grid{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:14px}
+.civs-col{display:flex;flex-direction:column}
+.neutral-col{align-items:center}
+.column{display:flex;flex-direction:column;gap:6px;min-height:36px;padding:8px;border-radius:8px;background:var(--bg1);border:0.5px solid var(--brown-dim);margin-bottom:4px}
+.civ{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;background:var(--bg2);border:0.5px solid var(--brown);transition:transform 0.15s}
+.civ:hover{transform:translateY(-2px)}
+.civ img{width:26px;height:26px;border-radius:4px;object-fit:cover}
+.civ label{font-size:13px;color:var(--text);flex:1;cursor:default}
+.civ-pick{background:rgba(40,120,40,0.08);border-color:var(--pick-border)}
+.civ-ban{background:rgba(180,40,40,0.08);border-color:var(--ban-border);opacity:0.8}
+.civ-ban label{color:var(--muted);text-decoration:line-through}
+.status-image{width:18px;height:18px;flex-shrink:0}
+.map-section{display:flex;flex-wrap:wrap;gap:10px;padding:8px;min-height:50px;background:var(--bg1);border:0.5px solid var(--brown-dim);border-radius:8px}
+.map-card{position:relative;width:110px;height:140px;border-radius:8px;border:0.5px solid var(--brown);background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;overflow:hidden;transition:transform 0.18s,border-color 0.18s;cursor:default}
+.map-card:hover{transform:translateY(-3px);border-color:var(--gold2)}
+.map-img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.75;border-radius:8px;transition:opacity 0.18s}
+.map-card:hover .map-img{opacity:0.9}
+.map-card::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 35%,rgba(8,5,2,0.92) 100%);border-radius:8px;pointer-events:none}
+.map-name{position:relative;z-index:2;font-size:11px;font-weight:600;color:var(--text);text-align:center;padding:0 6px 8px;line-height:1.2;font-family:'Inter',sans-serif;letter-spacing:0.3px}
+.map-ban{border-color:var(--ban-border)!important}
+.map-ban .map-img{opacity:0.3;filter:grayscale(80%) sepia(40%)}
+.map-ban .map-name{color:#c07070;text-decoration:line-through}
+.map-ban::before{content:'BAN';position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:3;font-size:9px;font-weight:700;letter-spacing:2px;color:#e07070;background:rgba(120,20,20,0.7);padding:2px 8px;border-radius:3px;font-family:'Inter',sans-serif}
+.map-pick-host{border-color:var(--host-dim)!important;box-shadow:inset 0 0 0 1px var(--host-dim)}
+.map-pick-host::before{content:'HOST';position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:3;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--host);background:rgba(20,60,120,0.7);padding:2px 8px;border-radius:3px;font-family:'Inter',sans-serif}
+.map-pick-guest{border-color:var(--guest-dim)!important;box-shadow:inset 0 0 0 1px var(--guest-dim)}
+.map-pick-guest::before{content:'GUEST';position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:3;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--guest);background:rgba(120,20,60,0.7);padding:2px 8px;border-radius:3px;font-family:'Inter',sans-serif}
+.map-neutral{border-color:rgba(232,200,122,0.2)!important}
+.map-buttons{position:relative;z-index:3;display:flex;gap:4px;padding-bottom:6px}
+.map-buttons button{font-size:14px;padding:3px 6px;border:none;background:rgba(0,0,0,0.5);border-radius:4px;cursor:pointer;line-height:1;transition:background 0.15s,transform 0.15s}
+.map-buttons button:hover{background:rgba(232,200,122,0.25);transform:scale(1.15)}
+.update-bar{display:flex;justify-content:center;margin-top:8px;padding-top:18px;border-top:0.5px solid var(--brown-dim)}
+.btn-update{background:var(--gold);color:var(--bg0);border:none;padding:12px 36px;border-radius:8px;font-size:14px;font-weight:700;font-family:'Cinzel',serif;letter-spacing:1px;cursor:pointer;transition:all 0.18s}
+.btn-update:hover{background:#f0d48a;transform:translateY(-1px)}
+.draft-footer{text-align:center;padding:16px;font-size:11px;color:var(--dim);letter-spacing:1px;border-top:0.5px solid var(--brown-dim);display:flex;justify-content:center;gap:10px}
+#draftCode,#mapDraftCode{background:var(--bg0);border:0.5px solid var(--brown);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;width:100%;outline:none;font-family:'Inter',sans-serif}
+#zoom-ctrl{position:fixed;top:8px;right:8px;z-index:9999;display:flex;align-items:center;gap:6px;background:rgba(10,6,2,0.95);border:0.5px solid #3a2a1a;border-radius:8px;padding:5px 10px}
+#zoom-ctrl .zlabel{font-size:10px;color:#665544;font-family:'Inter',sans-serif;letter-spacing:1px;text-transform:uppercase;margin-right:2px}
+#zoom-val{font-size:12px;color:#e8c87a;font-family:'Cinzel',serif;min-width:40px;text-align:center}
+.zbtn{width:28px!important;height:28px!important;padding:0!important;margin:0!important;font-size:18px!important;font-weight:700!important;border-radius:5px!important;background:#1a1208!important;border:0.5px solid #3a2a1a!important;color:#e8c87a!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;line-height:1!important;transition:background 0.15s}
+.zbtn:hover{background:#3a2a1a!important}
+.zbtn-reset{font-size:12px!important;width:36px!important;letter-spacing:0!important;color:#a09070!important}
+#zoom-wrap{transform-origin:top left;will-change:transform}
+@media(max-width:768px){.inputs-grid,.maps-grid,.civs-grid{grid-template-columns:1fr}.players-bar,.swap-row{flex-direction:column}}
+    </style>
+</head>
+<body>
+
+<div id="zoom-ctrl">
+    <span class="zlabel">Zoom</span>
+    <button class="zbtn" onclick="ajustarZoom(-0.1)">−</button>
+    <span id="zoom-val">100%</span>
+    <button class="zbtn" onclick="ajustarZoom(0.1)">+</button>
+    <button class="zbtn zbtn-reset" onclick="resetZoom()">↺ reset</button>
+</div>
+
+<script>
+(function(){
+    const ZOOM_KEY='admindraft_zoom';
+    let zoom=parseFloat(localStorage.getItem(ZOOM_KEY)||'1');
+    function aplicarZoom(){
+        const wrap=document.getElementById('zoom-wrap');
+        if(!wrap)return;
+        wrap.style.transform=zoom!==1?'scale('+zoom+')':'';
+        wrap.style.width=zoom<1?(100/zoom)+'%':'';
+        document.getElementById('zoom-val').textContent=Math.round(zoom*100)+'%';
+        localStorage.setItem(ZOOM_KEY,String(zoom));
+    }
+    window.ajustarZoom=function(d){zoom=Math.round(Math.min(2,Math.max(0.4,zoom+d))*10)/10;aplicarZoom()};
+    window.resetZoom=function(){zoom=1;aplicarZoom()};
+    document.addEventListener('DOMContentLoaded',function(){
+        const wrap=document.createElement('div');
+        wrap.id='zoom-wrap';wrap.style.transformOrigin='top left';
+        Array.from(document.body.children).filter(el=>el.id!=='zoom-ctrl'&&el.tagName!=='SCRIPT').forEach(el=>wrap.appendChild(el));
+        document.body.appendChild(wrap);
+        aplicarZoom();
+    });
+})();
+</script>
+
+<header class="draft-header">
+    <div class="draft-header-inner">
+        <div class="draft-logo">⚔</div>
+        <div>
+            <h1>Administrador de Drafts</h1>
+            <div class="draft-subtitle">Copa Uruguaya 2026</div>
+        </div>
+        <a href="overlay_control.html" class="btn-admindraft" target="_blank">🛡 Abrir Overlay Control</a>
+    </div>
+</header>
+
+<main class="draft-main">
+    <section class="players-bar">
+        <div class="player-card host"><div class="player-role">HOST</div><div class="player-name" id="hostName">—</div></div>
+        <div class="vs-badge">VS</div>
+        <div class="player-card guest"><div class="player-role">GUEST</div><div class="player-name" id="guestName">—</div></div>
+    </section>
+
+    <section class="input-block" style="margin-bottom:14px">
+        <label for="torneoNombreInput">Nombre del Torneo (aparece en el overlay)</label>
+        <div class="input-row">
+            <input type="text" id="torneoNombreInput" placeholder="ej: Copa Uruguaya 2026" oninput="guardarTorneo()"/>
+        </div>
+    </section>
+
+    <section class="inputs-grid">
+        <div class="input-block">
+            <div class="civ-status-row">
+                <label for="draftCode">Código Draft de Civs</label>
+                <span class="badge-req" id="civReqBadge">REQUERIDO</span>
+                <span class="badge-ok" id="civOkBadge">✓ CARGADO</span>
+            </div>
+            <div class="input-row">
+                <input type="text" id="draftCode" placeholder="ej: AbCdE"/>
+                <button onclick="fetchAndSaveDraftData()">Cargar</button>
+            </div>
+            <div class="swap-row">
+                <span class="swap-label">Civs</span>
+                <div class="name-inputs">
+                    <div class="name-field"><label class="lbl-host">HOST</label><input type="text" id="civHostName" placeholder="Nombre host" oninput="actualizarNombres()"/></div>
+                    <div class="name-field"><label class="lbl-guest">GUEST</label><input type="text" id="civGuestName" placeholder="Nombre guest" oninput="actualizarNombres()"/></div>
+                </div>
+                <span class="swap-badge" id="civSwapBadge">SWAPPED</span>
+                <button class="swap-btn" onclick="swapCivs()">⇄ Swap Civs</button>
+            </div>
+        </div>
+        <div class="input-block">
+            <label for="mapDraftCode" style="margin-bottom:8px">Mapas</label>
+            <div class="map-mode-row">
+                <button class="map-mode-btn active" id="btnModeDraft" onclick="setMapMode('draft')">Draft de mapas</button>
+                <button class="map-mode-btn" id="btnModeSingle" onclick="setMapMode('single')">Mapa único</button>
+            </div>
+            <div id="mapDraftArea">
+                <div class="input-row">
+                    <input type="text" id="mapDraftCode" placeholder="ej: XyZwQ"/>
+                    <button onclick="fetchAndSaveMapData()">Cargar</button>
+                </div>
+            </div>
+            <div id="mapSingleArea" style="display:none">
+                <div class="input-row">
+                    <input type="text" id="singleMapInput" placeholder="ej: Arabia, Nomad, Hideout..."/>
+                    <button onclick="confirmarMapaUnico()">Confirmar</button>
+                </div>
+                <div class="single-map-preview" id="singleMapPreview">
+                    <img class="single-map-img" id="singleMapImg" src="" alt=""/>
+                    <span id="singleMapNombre"></span>
+                </div>
+            </div>
+            <div class="swap-row">
+                <span class="swap-label">Mapas</span>
+                <div class="name-inputs">
+                    <div class="name-field"><label class="lbl-host">HOST</label><input type="text" id="mapHostName" placeholder="Nombre host" oninput="actualizarNombres()"/></div>
+                    <div class="name-field"><label class="lbl-guest">GUEST</label><input type="text" id="mapGuestName" placeholder="Nombre guest" oninput="actualizarNombres()"/></div>
+                </div>
+                <span class="swap-badge" id="mapSwapBadge">SWAPPED</span>
+                <button class="swap-btn" onclick="swapMapas()">⇄ Swap Mapas</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="draft-section">
+        <h2 class="section-title">🗺 Mapas</h2>
+        <div class="maps-grid">
+            <div class="maps-col"><div class="col-label host-label" id="hostMapsLabel">Host</div><div id="hostMaps" class="map-section"></div></div>
+            <div class="maps-col"><div class="col-label neutral-label">Neutrales</div><div id="neutralMaps" class="map-section"></div></div>
+            <div class="maps-col"><div class="col-label guest-label" id="guestMapsLabel">Guest</div><div id="guestMaps" class="map-section"></div></div>
+        </div>
+    </section>
+
+    <section class="draft-section">
+        <h2 class="section-title">🛡 Civilizaciones</h2>
+        <div class="civs-grid">
+            <div class="civs-col">
+                <div class="col-label host-label" id="hostCivsLabel">Host Picks</div>
+                <div id="hostPicksColumn" class="column"></div>
+                <div class="col-label host-label" style="margin-top:10px" id="hostBansLabel">Host Bans</div>
+                <div id="hostBansColumn" class="column"></div>
+                <div id="hostSnipesColumn" class="column"></div>
+            </div>
+            <div class="civs-col neutral-col">
+                <div class="col-label neutral-label">Civs Neutrales</div>
+                <div id="neutralCivsColumn" class="column"></div>
+            </div>
+            <div class="civs-col">
+                <div class="col-label guest-label" id="guestCivsLabel">Guest Picks</div>
+                <div id="guestPicksColumn" class="column"></div>
+                <div class="col-label guest-label" style="margin-top:10px" id="guestBansLabel">Guest Bans</div>
+                <div id="guestBansColumn" class="column"></div>
+                <div id="guestSnipesColumn" class="column"></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="update-bar">
+        <button class="btn-update" id="btnActualizar">↺ Actualizar Overlay</button>
+    </div>
+</main>
+
+<footer class="draft-footer">
+    <span>Copa Uruguaya 2026 · AUA</span><span style="color:#3a2a1a">·</span><span>Diseñado por JabsUY</span>
+</footer>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+const TOKEN_KEY_DRAFT = 'aua_admin_token_draft';
+function getAdminToken() { return localStorage.getItem(TOKEN_KEY_DRAFT) || ''; }
+function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAdminToken() };
+}
+
+// Obtener GH token desde el servidor (no hardcodeado en el frontend)
+async function getGHToken() {
+    const cached = sessionStorage.getItem('gh_token_cache');
+    if (cached) return cached;
+    try {
+        const r = await fetch(WS_SERVER + '/auth/gh-token', {
+            headers: { 'Authorization': 'Bearer ' + getAdminToken() }
+        });
+        if (!r.ok) return '';
+        const { token } = await r.json();
+        sessionStorage.setItem('gh_token_cache', token);
+        return token;
+    } catch(e) { return ''; }
+}
+const WS_SERVER = window.location.origin;
+(async function checkAuth() {
+    const token = getAdminToken();
+    if (!token) { window.location.href = '/login.html?redirect=admindraft.html'; return; }
+    try {
+        const r = await fetch(WS_SERVER + '/auth/verify', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (r.status === 401) {
+            localStorage.removeItem(TOKEN_KEY_DRAFT);
+            window.location.href = '/login.html?redirect=admindraft.html';
+        }
+    } catch(e) { console.warn('[auth] No se pudo verificar:', e.message);
+}
+})();
+
+
+
+// ── Swap / nombres ────────────────────────────────────────────────────────────
+let civSwapped = false;
+let mapSwapped = false;
+
+function guardarTorneo() {
+    const val = document.getElementById('torneoNombreInput').value.trim();
+    if (val) localStorage.setItem('torneoNombre', val);
+    else localStorage.removeItem('torneoNombre');
+}
+
+function cargarEstado() {
+    civSwapped = localStorage.getItem('civSwapped') === 'true';
+    mapSwapped = localStorage.getItem('mapSwapped') === 'true';
+    document.getElementById('civSwapBadge').classList.toggle('visible', civSwapped);
+    document.getElementById('mapSwapBadge').classList.toggle('visible', mapSwapped);
+    const n = JSON.parse(localStorage.getItem('draftNames') || '{}');
+    if (n.civHost)  document.getElementById('civHostName').value  = n.civHost;
+    if (n.civGuest) document.getElementById('civGuestName').value = n.civGuest;
+    if (n.mapHost)  document.getElementById('mapHostName').value  = n.mapHost;
+    if (n.mapGuest) document.getElementById('mapGuestName').value = n.mapGuest;
+    actualizarNombres();
+    const hn = localStorage.getItem('hostName');
+    const gn = localStorage.getItem('guestName');
+    if (hn) document.getElementById('hostName').textContent = hn;
+    if (gn) document.getElementById('guestName').textContent = gn;
+    const tn = localStorage.getItem('torneoNombre');
+    if (tn) document.getElementById('torneoNombreInput').value = tn;
+
+    actualizarBadgeCivs();
+    setMapMode(localStorage.getItem('mapMode') || 'draft');
+
+    // Restaurar vista de mapa único si ya había uno guardado
+    if (localStorage.getItem('mapMode') === 'single') {
+        const mapasData = JSON.parse(localStorage.getItem('mapasData') || '[]');
+        const single = mapasData.find(m => m.player === 'NONE');
+        if (single) {
+            document.getElementById('singleMapInput').value = single.name;
+            document.getElementById('singleMapNombre').textContent = single.name;
+            if (single.imageUrl) document.getElementById('singleMapImg').src = single.imageUrl;
+            document.getElementById('singleMapPreview').classList.add('visible');
+        }
+    }
+}
+
+function swapCivs() {
+    civSwapped = !civSwapped;
+    localStorage.setItem('civSwapped', civSwapped);
+    document.getElementById('civSwapBadge').classList.toggle('visible', civSwapped);
+    actualizarNombres();
+    location.reload();
+}
+
+function swapMapas() {
+    mapSwapped = !mapSwapped;
+    localStorage.setItem('mapSwapped', mapSwapped);
+    document.getElementById('mapSwapBadge').classList.toggle('visible', mapSwapped);
+    actualizarNombres();
+    location.reload();
+}
+
+function actualizarNombres() {
+    const ch = document.getElementById('civHostName').value.trim();
+    const cg = document.getElementById('civGuestName').value.trim();
+    const mh = document.getElementById('mapHostName').value.trim();
+    const mg = document.getElementById('mapGuestName').value.trim();
+    localStorage.setItem('draftNames', JSON.stringify({civHost:ch,civGuest:cg,mapHost:mh,mapGuest:mg}));
+    const chLabel = civSwapped ? (cg||'Guest') : (ch||'Host');
+    const cgLabel = civSwapped ? (ch||'Host')  : (cg||'Guest');
+    const mhLabel = mapSwapped ? (mg||'Guest') : (mh||'Host');
+    const mgLabel = mapSwapped ? (mh||'Host')  : (mg||'Guest');
+    document.getElementById('hostCivsLabel').textContent  = chLabel + ' Picks';
+    document.getElementById('hostBansLabel').textContent  = chLabel + ' Bans';
+    document.getElementById('guestCivsLabel').textContent = cgLabel + ' Picks';
+    document.getElementById('guestBansLabel').textContent = cgLabel + ' Bans';
+    document.getElementById('hostMapsLabel').textContent  = mhLabel;
+    document.getElementById('guestMapsLabel').textContent = mgLabel;
+    document.getElementById('hostName').textContent  = chLabel;
+    document.getElementById('guestName').textContent = cgLabel;
+}
+
+// ── Badge civs ────────────────────────────────────────────────────────────────
+function actualizarBadgeCivs() {
+    const cargado = JSON.parse(localStorage.getItem('civsData') || '[]').length > 0 ||
+                    JSON.parse(localStorage.getItem('neutralCivs') || '[]').length > 0;
+    document.getElementById('civOkBadge').classList.toggle('visible', cargado);
+    document.getElementById('civReqBadge').style.display = cargado ? 'none' : '';
+}
+
+// ── Modo mapa (draft / único) ─────────────────────────────────────────────────
+let mapaDBCache = null;
+
+async function cargarMapaDB() {
+    if (mapaDBCache) return mapaDBCache;
+    try {
+        const r = await fetch(WS_SERVER + '/api/mapas?t=' + Date.now());
+        if (r.ok) mapaDBCache = await r.json();
+    } catch(e) {}
+    return mapaDBCache;
+}
+
+function setMapMode(mode) {
+    localStorage.setItem('mapMode', mode);
+    document.getElementById('mapDraftArea').style.display  = mode === 'draft'  ? '' : 'none';
+    document.getElementById('mapSingleArea').style.display = mode === 'single' ? '' : 'none';
+    document.getElementById('btnModeDraft').classList.toggle('active', mode === 'draft');
+    document.getElementById('btnModeSingle').classList.toggle('active', mode === 'single');
+    if (mode === 'single') cargarMapaDB();
+}
+
+async function confirmarMapaUnico() {
+    const nombre = document.getElementById('singleMapInput').value.trim();
+    if (!nombre) { alert('Ingresá el nombre del mapa.'); return; }
+
+    let imageUrl = '';
+    let nombreFinal = nombre;
+    const db = await cargarMapaDB();
+    if (db) {
+        const entry = Object.values(db).find(m =>
+            m.name.toLowerCase() === nombre.toLowerCase() ||
+            m.name.toLowerCase().includes(nombre.toLowerCase())
+        );
+        if (entry) { imageUrl = entry.url; nombreFinal = entry.name; }
+    }
+
+    const mapasData = [{ name: nombreFinal, imageUrl, player: 'NONE', actionType: 'pick', won: false, lost: false }];
+    localStorage.setItem('mapasData', JSON.stringify(mapasData));
+
+    document.getElementById('singleMapNombre').textContent = nombreFinal;
+    if (imageUrl) document.getElementById('singleMapImg').src = imageUrl;
+    document.getElementById('singleMapPreview').classList.add('visible');
+    renderMaps();
+}
+
+function setEstadoBtn(texto, color) {
+    const btn = document.getElementById('btnActualizar');
+    btn.textContent = texto;
+    btn.style.background = color || '';
+    if (color) setTimeout(() => { btn.textContent = '↺ Actualizar Overlay'; btn.style.background = ''; }, 3000);
+}
+
+// ── Botón Actualizar ──────────────────────────────────────────────────────────
+// Lee SIEMPRE desde localStorage — es la única fuente de verdad compartida
+// Los JS de civs/mapas guardan ahí inmediatamente al cargar el draft
+document.getElementById('btnActualizar').addEventListener('click', async function() {
+    const civsData    = JSON.parse(localStorage.getItem('civsData')    || '[]');
+    const neutralCivs = JSON.parse(localStorage.getItem('neutralCivs') || '[]');
+
+    if (civsData.length === 0 && neutralCivs.length === 0) {
+        setEstadoBtn('⚠ Cargá el draft de civs primero', '#803020');
+        return;
+    }
+
+    const mapasData   = JSON.parse(localStorage.getItem('mapasData')   || '[]');
+    const draftNames  = JSON.parse(localStorage.getItem('draftNames')  || '{}');
+
+    // Debug: mostrar en consola qué se va a enviar
+    console.log('[Actualizar] civsData:', civsData.length, '| neutralCivs:', neutralCivs.length, '| mapasData:', mapasData.length);
+
+    const state = {
+        civsData,
+        neutralCivs,
+        mapasData,
+        draftNames,
+        torneo:    localStorage.getItem('torneoNombre') || '',
+        civSwapped: localStorage.getItem('civSwapped') === 'true',
+        mapSwapped: localStorage.getItem('mapSwapped') === 'true',
+        ts: Date.now()
+    };
+
+    setEstadoBtn('⏳ Enviando...', '#a07820');
+
+    try {
+        const r = await fetch(WS_SERVER + '/overlay/draft', {
+            method:  'POST',
+            headers: authHeaders(),
+            body:    JSON.stringify(state)
+        });
+        if (r.ok) {
+            setEstadoBtn('✅ Overlay actualizado', '#5a8030');
+            console.log('[Actualizar] ✅ enviado a Oscar');
+        } else {
+            setEstadoBtn('❌ Error ' + r.status, '#803020');
+        }
+    } catch(e) {
+        setEstadoBtn('❌ Servidor no disponible', '#803020');
+        console.error('[Actualizar] Error:', e.message);
+    }
+    // SIN location.reload() — no borramos los datos de memoria
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    cargarEstado();
+    renderCivs();
+    renderNeutralCivs();
+    renderMaps();
+});
+</script>
+
+<script>
+// ── admindraftcivs ────────────────────────────────────────────────────────────
+async function fetchAndSaveDraftData() {
+    const draftCode = document.getElementById('draftCode').value;
+    if (!draftCode) { alert('Por favor, ingresa un código de draft.'); return; }
+    try {
+        const response = await fetch('https://aoe2cm.net/api/draft/' + draftCode);
+        const data = await response.json();
+
+        const hostName  = data.nameHost  || 'Host';
+        const guestName = data.nameGuest || 'Guest';
+        localStorage.setItem('hostName',  hostName);
+        localStorage.setItem('guestName', guestName);
+        document.getElementById('hostName').textContent  = hostName;
+        document.getElementById('guestName').textContent = guestName;
+
+        const civsData    = [];
+        const neutralCivs = [];
+
+        data.events.forEach(event => {
+            if (!event.chosenOptionId || (event.player === 'NONE' && !event.actionType)) return;
+            const civ = { name: event.chosenOptionId, player: event.player, actionType: event.actionType, won: false, lost: false };
+            if (event.player === 'NONE') neutralCivs.push(civ);
+            else civsData.push(civ);
+        });
+
+        localStorage.setItem('civsData',    JSON.stringify(civsData));
+        localStorage.setItem('neutralCivs', JSON.stringify(neutralCivs));
+        console.log('[fetchCivs] civsData:', civsData.length, '| neutralCivs:', neutralCivs.length);
+
+        actualizarBadgeCivs();
+        renderCivs();
+        renderNeutralCivs();
+    } catch(e) {
+        console.error('Error civs:', e);
+        alert('Error al cargar el draft de civs. Verificá el código.');
+    }
+}
+
+function renderCivs() {
+    const cols = {
+        hostPicks:  document.getElementById('hostPicksColumn'),
+        guestPicks: document.getElementById('guestPicksColumn'),
+        hostBans:   document.getElementById('hostBansColumn'),
+        guestBans:  document.getElementById('guestBansColumn'),
+        hostSnipes: document.getElementById('hostSnipesColumn'),
+        guestSnipes:document.getElementById('guestSnipesColumn'),
+    };
+    Object.values(cols).forEach(c => c.innerHTML = '');
+
+    const civsData   = JSON.parse(localStorage.getItem('civsData') || '[]');
+    const snipedCivs = civsData.filter(c => c.actionType === 'snipe').map(c => c.name);
+
+    civsData.forEach(civ => {
+        if (civ.player === 'NONE') return;
+        let col;
+        if      (civ.actionType === 'snipe') col = civ.player === 'HOST' ? cols.hostSnipes  : cols.guestSnipes;
+        else if (civ.actionType === 'ban')   col = civ.player === 'HOST' ? cols.hostBans    : cols.guestBans;
+        else if (civ.actionType === 'pick') {
+            if (snipedCivs.includes(civ.name)) return;
+            col = civ.player === 'HOST' ? cols.hostPicks : cols.guestPicks;
+        } else return;
+
+        const el = document.createElement('div');
+        el.classList.add('civ');
+        if (civ.actionType === 'ban')   el.classList.add('civ-ban');
+        if (civ.actionType === 'snipe') el.classList.add('civ-snipe');
+        if (civ.actionType === 'snipe') { const img = document.createElement('img'); img.src='img/snipe.svg'; img.classList.add('status-image'); el.appendChild(img); }
+        if (civ.won)  { const img = document.createElement('img'); img.src='img/gano.svg';   img.classList.add('status-image'); el.appendChild(img); }
+        if (civ.lost) { const img = document.createElement('img'); img.src='img/perdio.svg'; img.classList.add('status-image'); el.appendChild(img); }
+        el.innerHTML += '<span>' + civ.name + '</span>' + (civ.actionType === 'pick' ? '<label><input type="checkbox" ' + (civ.won?'checked':'') + ' onchange="markAsWinner(\'' + civ.name + '\',\'' + civ.player + '\',this.checked)"> Ganador</label><label><input type="checkbox" ' + (civ.lost?'checked':'') + ' onchange="markAsLoser(\'' + civ.name + '\',\'' + civ.player + '\',this.checked)"> Perdedor</label>' : '');
+        col.appendChild(el);
+    });
+}
+
+function renderNeutralCivs() {
+    const col = document.getElementById('neutralCivsColumn');
+    col.innerHTML = '';
+    const neutralCivs = JSON.parse(localStorage.getItem('neutralCivs') || '[]');
+    neutralCivs.filter(c => c.actionType).forEach(civ => {
+        const el = document.createElement('div');
+        el.classList.add('civ', 'neutral-civ');
+        if (civ.actionType === 'ban') el.classList.add('civ-ban');
+        el.innerHTML = '<span>' + civ.name + '</span>';
+        col.appendChild(el);
+    });
+}
+
+function markAsWinner(civName, player, isWinner) {
+    const data = JSON.parse(localStorage.getItem('civsData'));
+    const c = data.find(x => x.name === civName && x.player === player);
+    if (c) c.won = isWinner;
+    localStorage.setItem('civsData', JSON.stringify(data));
+    renderCivs();
+}
+
+function markAsLoser(civName, player, isLoser) {
+    const data = JSON.parse(localStorage.getItem('civsData'));
+    const c = data.find(x => x.name === civName && x.player === player);
+    if (c) c.lost = isLoser;
+    localStorage.setItem('civsData', JSON.stringify(data));
+    renderCivs();
+}
+</script>
+
+<script>
+// ── admindraftmapas ───────────────────────────────────────────────────────────
+async function fetchAndSaveMapData() {
+    const mapDraftCode = document.getElementById('mapDraftCode').value;
+    if (!mapDraftCode) { alert('Por favor, ingresa un código de draft.'); return; }
+    try {
+        const response = await fetch('https://aoe2cm.net/api/draft/' + mapDraftCode);
+        const mapdata  = await response.json();
+
+        const mapasData = mapdata.events.map(event => {
+            const opt = mapdata.preset.draftOptions.find(o => o.id === event.chosenOptionId);
+            const rawUrl = opt?.imageUrls?.emblem || '';
+            return {
+                name:       opt ? opt.name : event.chosenOptionId,
+                imageUrl:   rawUrl.startsWith('http') ? rawUrl : 'https://aoe2cm.net' + rawUrl,
+                player:     event.player,
+                actionType: event.actionType,
+                won:  false,
+                lost: false
+            };
+        });
+
+        localStorage.setItem('mapasData', JSON.stringify(mapasData));
+        console.log('[fetchMapas] mapasData:', mapasData.length);
+
+        alert('Datos de mapas cargados.');
+        renderMaps();
+    } catch(e) {
+        console.error('Error mapas:', e);
+        alert('Error al cargar el draft de mapas. Verificá el código.');
+    }
+}
+
+function renderMaps() {
+    const hostMaps    = document.getElementById('hostMaps');
+    const guestMaps   = document.getElementById('guestMaps');
+    const neutralMaps = document.getElementById('neutralMaps');
+    hostMaps.innerHTML = guestMaps.innerHTML = neutralMaps.innerHTML = '';
+
+    const mapasData = JSON.parse(localStorage.getItem('mapasData') || '[]');
+    mapasData.forEach(map => {
+        const el = document.createElement('div');
+        el.className = 'map-card' + (map.actionType === 'ban' ? ' map-ban' : '');
+        el.innerHTML = '<img src="' + map.imageUrl + '" alt="' + map.name + '" class="map-img"><span class="map-name">' + map.name + '</span><div class="map-buttons"><button onclick="markWin(\'' + map.name + '\')">Ⓐ</button><button onclick="markLoss(\'' + map.name + '\')">Ⓑ</button></div>';
+        if      (map.player === 'HOST')  hostMaps.appendChild(el);
+        else if (map.player === 'GUEST') guestMaps.appendChild(el);
+        else                             neutralMaps.appendChild(el);
+    });
+}
+
+function markWin(mapName) {
+    const data = JSON.parse(localStorage.getItem('mapasData') || '[]');
+    data.forEach(m => { if (m.name === mapName) { m.won = true; m.lost = false; } });
+    localStorage.setItem('mapasData', JSON.stringify(data));
+    renderMaps();
+}
+
+function markLoss(mapName) {
+    const data = JSON.parse(localStorage.getItem('mapasData') || '[]');
+    data.forEach(m => { if (m.name === mapName) { m.won = false; m.lost = true; } });
+    localStorage.setItem('mapasData', JSON.stringify(data));
+    renderMaps();
+}
+</script>
+
+</body>
+</html>

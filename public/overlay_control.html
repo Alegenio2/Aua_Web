@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Control Overlays — Copa Uruguaya 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e0d8c8;font-family:'Inter',sans-serif;min-height:100vh;padding:24px 16px}
+
+.page-header{display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:0 auto 28px;flex-wrap:wrap;gap:12px}
+h1{font-family:'Cinzel',serif;color:#e8c87a;font-size:18px;letter-spacing:2px;text-transform:uppercase}
+.subtitle{font-size:12px;color:#665544;margin-top:3px}
+
+.btn-admindraft{
+  display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:8px;
+  background:#1a1208;border:1px solid #e8c87a;color:#e8c87a;
+  font-size:12px;font-weight:600;font-family:'Cinzel',serif;letter-spacing:1px;
+  cursor:pointer;text-decoration:none;transition:all 0.18s;
+}
+.btn-admindraft:hover{background:#2a1a08;box-shadow:0 0 14px rgba(232,200,122,.25)}
+
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1100px;margin:0 auto}
+.full{grid-column:1/-1}
+
+.panel{background:#131008;border:0.5px solid #3a2a1a;border-radius:10px;padding:18px}
+.panel-title{font-size:10px;color:#806040;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;padding-bottom:8px;border-bottom:0.5px solid #2a1a0a;display:flex;align-items:center;gap:6px}
+.ptdot{width:6px;height:6px;border-radius:50%;background:#806040;flex-shrink:0}
+
+label{display:block;font-size:11px;color:#806040;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;margin-top:12px}
+label:first-of-type{margin-top:0}
+input,select{width:100%;background:#0d0d0d;border:0.5px solid #3a2a1a;border-radius:6px;padding:8px 10px;color:#e0d8c8;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
+input:focus,select:focus{border-color:#e8c87a}
+input::placeholder{color:#2a1a0a}
+
+.btn{width:100%;padding:10px;border-radius:7px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.18s;border:none;margin-top:8px}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.btn-gold{background:#e8c87a;color:#0a0a0a}.btn-gold:hover:not(:disabled){background:#f0d48a}
+.btn-outline{background:transparent;border:0.5px solid #3a2a1a;color:#a09070}.btn-outline:hover{border-color:#e8c87a;color:#e8c87a}
+.btn-danger{background:#5a1010;color:#f0a0a0;border:0.5px solid #7a2020}.btn-danger:hover{background:#7a1818}
+
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:6px;flex-shrink:0}
+.dot-on{background:#a8c860;box-shadow:0 0 8px #a8c86060}
+.dot-off{background:#3a2a1a}
+.dot-warn{background:#e8a030;box-shadow:0 0 8px #e8a03060}
+.status-text{font-size:12px;color:#a09070;vertical-align:middle}
+
+.mode-row{display:flex;gap:6px;margin-top:8px}
+.mode-btn{flex:1;padding:8px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid #2a1a0a;background:#0d0d0d;color:#665544;transition:all 0.18s;font-family:'Inter',sans-serif}
+.mode-btn.active{background:#1a1208;border-color:#e8c87a;color:#e8c87a}
+
+.preview{background:#0d0d0d;border:0.5px solid #1a1208;border-radius:8px;padding:12px;margin-top:10px;min-height:72px}
+.preview-empty{font-size:12px;color:#2a1a0a;text-align:center;padding:16px 0}
+.pv-nick{font-family:'Cinzel',serif;font-size:13px;color:#e8c87a;margin-bottom:7px}
+.pv-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.pv-label{color:#554433}
+.suggestions{background:#0d0d0d;border:0.5px solid #3a2a1a;border-radius:0 0 6px 6px;overflow:hidden;display:none}
+.sug-item{padding:8px 10px;font-size:13px;cursor:pointer;color:#a09070;border-top:0.5px solid #1a1208}
+.sug-item:hover{background:#1a1208;color:#e8c87a}
+
+/* Token */
+.token-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.token-row input{flex:1;margin-top:0}
+.tbtn{padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;background:#1a1208;border:0.5px solid #3a2a1a;color:#a09070;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap}
+.tbtn:hover{border-color:#e8c87a;color:#e8c87a}
+.tok-ok{font-size:11px;padding:3px 10px;border-radius:10px;color:#a8c860;background:rgba(100,160,40,.1);border:0.5px solid rgba(100,160,40,.3);white-space:nowrap}
+.tok-off{font-size:11px;padding:3px 10px;border-radius:10px;color:#665544;background:rgba(60,40,20,.3);border:0.5px solid #3a2a1a;white-space:nowrap}
+
+/* Mapa grid */
+.map-active-bar{display:flex;align-items:center;gap:12px;background:#0d0d0d;border:0.5px solid #3a2a1a;border-radius:8px;padding:10px 14px;margin-bottom:12px}
+.map-active-img{width:70px;height:44px;border-radius:5px;object-fit:cover;border:1px solid #3a2a1a;flex-shrink:0;background:#1a1208}
+.map-active-name{font-family:'Cinzel',serif;font-size:13px;color:#e8c87a}
+.map-active-cat{font-size:10px;color:#665544;margin-top:2px}
+
+.map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:7px;margin-top:8px}
+.map-cat-label{grid-column:1/-1;font-size:9px;color:#554433;letter-spacing:2px;text-transform:uppercase;padding:6px 0 2px;border-top:0.5px solid #1a1208;margin-top:2px}
+.map-cat-label:first-child{border-top:none;margin-top:0}
+
+.mthumb{position:relative;border-radius:6px;overflow:hidden;cursor:pointer;border:2px solid #2a1a0a;transition:all 0.18s;aspect-ratio:16/10;background:#0d0d0d}
+.mthumb:hover{border-color:#a09070;transform:translateY(-1px)}
+.mthumb.sel{border-color:#e8c87a;box-shadow:0 0 10px rgba(232,200,122,.3)}
+.mthumb img{width:100%;height:100%;object-fit:cover;opacity:.7;transition:opacity .18s;display:block}
+.mthumb:hover img,.mthumb.sel img{opacity:1}
+.mthumb-name{position:absolute;bottom:0;left:0;right:0;font-size:8px;font-weight:600;color:#e8e0d0;text-align:center;background:rgba(8,5,2,.88);padding:3px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.log{max-height:110px;overflow-y:auto;font-size:11px;padding:8px;background:#0d0d0d;border-radius:6px;border:0.5px solid #1a1208;scrollbar-width:thin}
+.log p{margin-bottom:2px;line-height:1.4}
+.ok{color:#6a8040}.err{color:#804040}.info{color:#806040}.warn{color:#a07020}
+
+.sep{grid-column:1/-1;display:flex;align-items:center;gap:12px;font-family:'Cinzel',serif;font-size:10px;color:#3a2a1a;letter-spacing:2px;margin:4px 0}
+.sep::before,.sep::after{content:'';flex:1;height:0.5px;background:#1a1208}
+
+hr{border:none;border-top:0.5px solid #1a1208;margin:0}
+
+@media(max-width:640px){.layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div style="max-width:1100px;margin:0 auto">
+
+  <div class="page-header">
+    <div>
+      <h1>⚔ Control de Overlays</h1>
+      <div class="subtitle">Copa Uruguaya 2026 — Panel de transmisión</div>
+    </div>
+    <a href="admindraft.html" class="btn-admindraft" target="_blank">🛡 Abrir Admin Draft</a>
+  </div>
+
+  <div class="layout">
+
+    <!-- TOKEN -->
+    <div class="panel full" style="display: none;">
+      <div class="panel-title"><span class="ptdot"></span>GitHub Token</div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div class="token-row" style="flex:1;min-width:220px">
+          <input id="gh-token" type="password" placeholder="ghp_xxxxxxxxxxxxxxxx"/>
+          <button class="tbtn" id="btn-guardar-token">Guardar</button>
+          <button class="tbtn" id="btn-borrar-token">Borrar</button>
+        </div>
+        <span id="token-status" class="tok-off">No configurado</span>
+      </div>
+      <div style="font-size:11px;color:#3a2a1a;margin-top:8px">Necesario para publicar el mapa en el overlay. Se guarda en este navegador.</div>
+    </div>
+
+    <!-- SEPARADOR MAPA -->
+    <div class="sep full">MAPA EN JUEGO</div>
+
+    <!-- SELECTOR MAPA -->
+    <div class="panel full">
+      <div class="panel-title"><span class="ptdot"></span>Mapa actual</div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span class="dot dot-off" id="map-dot"></span>
+        <span class="status-text" id="map-status">Sin mapa activo</span>
+      </div>
+
+      <div class="map-active-bar" id="map-active-bar" style="display:none">
+        <img class="map-active-img" id="map-active-img" src="" alt=""/>
+        <div>
+          <div class="map-active-name" id="map-active-name">—</div>
+          <div class="map-active-cat"  id="map-active-cat"></div>
+        </div>
+      </div>
+
+      <div class="map-grid" id="map-grid">
+        <div style="font-size:12px;color:#3a2a1a;padding:12px 0">Cargando mapas...</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+        <button class="btn btn-gold" id="btn-publicar-mapa" onclick="publicarMapa()" disabled>🗺 Publicar en overlay</button>
+        <button class="btn btn-outline" onclick="ocultarMapa()">✕ Ocultar mapa</button>
+      </div>
+    </div>
+
+    <!-- SEPARADOR STATS -->
+    <div class="sep full">OVERLAY DE STATS (JUGADORES)</div>
+
+    <!-- J1 -->
+    <div class="panel">
+      <div class="panel-title"><span class="ptdot" style="background:#6aaae8"></span>Jugador 1 — izquierda</div>
+      <label>Nick</label>
+      <input id="j1-input" type="text" placeholder="ej: TINCHO" oninput="buscar(1)"/>
+      <div class="suggestions" id="j1-sug"></div>
+      <div class="preview" id="j1-preview"><div class="preview-empty">Escribí un nick para buscar</div></div>
+    </div>
+
+    <!-- J2 -->
+    <div class="panel">
+      <div class="panel-title"><span class="ptdot" style="background:#e86a8a"></span>Jugador 2 — derecha</div>
+      <label>Nick</label>
+      <input id="j2-input" type="text" placeholder="ej: JabsUY" oninput="buscar(2)"/>
+      <div class="suggestions" id="j2-sug"></div>
+      <div class="preview" id="j2-preview"><div class="preview-empty">Escribí un nick para buscar</div></div>
+    </div>
+
+    <!-- ENCUENTRO -->
+    <div class="panel">
+      <div class="panel-title"><span class="ptdot"></span>Datos del encuentro</div>
+      <label>Nombre del torneo</label>
+      <input id="enc-torneo" type="text" placeholder="Copa Uruguaya 2026"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px">
+        <div><label>Grupo</label><input id="enc-grupo" placeholder="B"/></div>
+        <div><label>Ronda</label><input id="enc-ronda" placeholder="1"/></div>
+        <div><label>Formato</label>
+          <select id="enc-formato">
+            <option value="Bo3">Bo3</option>
+            <option value="Bo5" selected>Bo5</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROL STATS -->
+    <div class="panel">
+      <div class="panel-title"><span class="ptdot"></span>Control overlay stats</div>
+      <div style="margin-bottom:10px">
+        <span class="dot dot-off" id="st-dot"></span>
+        <span class="status-text" id="st-text">Inactivo</span>
+      </div>
+      <div style="font-size:11px;color:#554433;margin-bottom:6px">Modo</div>
+      <div class="mode-row">
+        <button class="mode-btn active" onclick="setModo('pre',this)">Presentación</button>
+        <button class="mode-btn"        onclick="setModo('mini',this)">Mini</button>
+        <button class="mode-btn"        onclick="setModo('off',this)">Oculto</button>
+      </div>
+      <button class="btn btn-gold"    onclick="enviarStats()" style="margin-top:14px">▶ Enviar al overlay</button>
+      <button class="btn btn-outline" onclick="ocultarStats()">✕ Ocultar</button>
+      <button class="btn btn-danger"  onclick="resetearStats()">↺ Reset</button>
+    </div>
+
+    <hr class="full"/>
+
+    <!-- LOG -->
+    <div class="panel full">
+      <div class="panel-title"><span class="ptdot"></span>Log</div>
+      <div class="log" id="log"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+const OSCAR = window.location.origin;
+const TOKEN_KEY_CONTROL = 'aua_admin_token_control';
+function getAdminToken() { return localStorage.getItem(TOKEN_KEY_CONTROL) || ''; }
+function authHeaders(extra) { return { 'Content-Type':'application/json', 'Authorization':'Bearer ' + getAdminToken(), ...(extra||{}) }; }
+
+async function getGHToken() {
+    const cached = sessionStorage.getItem('gh_token_cache');
+    if (cached) return cached;
+    try {
+        const r = await fetch(OSCAR + '/auth/gh-token', { headers: { 'Authorization': 'Bearer ' + getAdminToken() } });
+        if (!r.ok) return '';
+        const { token } = await r.json();
+        sessionStorage.setItem('gh_token_cache', token);
+        return token;
+    } catch(e) { return ''; }
+}
+
+const WS_SERVER = window.location.origin;
+
+(async function checkAuth() {
+    const token = getAdminToken();
+
+    if (!token) {
+        window.location.href = OSCAR + '/login.html?redirect=overlay_control.html';
+        return;
+    }
+
+    try {
+        const r = await fetch(WS_SERVER + '/auth/verify', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        if (r.status === 401) {
+            localStorage.removeItem(TOKEN_KEY_CONTROL);
+            window.location.href = OSCAR + '/login.html?redirect=overlay_control.html';
+        }
+
+    } catch(e) {
+        console.warn('[auth] No se pudo verificar el token:', e.message);
+    }
+})();
+
+const STATS_URL   = window.location.origin + '/api/stats';
+const MAPAS_URL   = window.location.origin + '/api/mapas';
+const LS_KEY      = 'aua_overlay_state';
+const TOKEN_KEY   = 'aua_gh_token';
+const GH_USER     = 'Alegenio2';
+const GH_REPO     = 'aua';
+const GH_BRANCH   = 'main';
+const GH_MAP_PATH   = 'json/mapa_actual.json';
+const GH_STATS_PATH = 'json/overlay_state.json';
+
+
+// ── Log ───────────────────────────────────────────────────────────────────────
+function log(msg, tipo='info') {
+  const el = document.getElementById('log');
+  const t  = new Date().toLocaleTimeString('es-UY');
+  el.innerHTML = `<p class="${tipo}">[${t}] ${msg}</p>` + el.innerHTML;
+}
+
+// ── Token ─────────────────────────────────────────────────────────────────────
+function getToken() { return sessionStorage.getItem('gh_token_cache') || ''; }
+
+function guardarToken() {
+  const t = document.getElementById('gh-token').value.trim();
+  if (!t || t.includes('●')) { log('Ingresá el token primero', 'err'); return; }
+  sessionStorage.setItem('gh_token_cache', t);
+  document.getElementById('gh-token').value = '●'.repeat(20);
+  setTokenUI(true);
+  log('Token guardado en sesión', 'ok');
+}
+
+function borrarToken() {
+  sessionStorage.removeItem('gh_token_cache');
+  document.getElementById('gh-token').value = '';
+  setTokenUI(false);
+  log('Token borrado', 'warn');
+}
+
+function setTokenUI(ok) {
+  const el = document.getElementById('token-status');
+  el.textContent = ok ? '✓ Configurado' : 'No configurado';
+  el.className   = ok ? 'tok-ok' : 'tok-off';
+}
+
+// ── GitHub helpers ────────────────────────────────────────────────────────────
+function cleanToken(t) {
+  // Token GitHub: solo letras, numeros, guion bajo y guion medio
+  return (t || '').replace(/[^a-zA-Z0-9_\-]/g, '');
+}
+
+function ghH() {
+  const t = cleanToken(getToken());
+  return {
+    'Authorization': 'Bearer ' + t,
+    'Accept':        'application/vnd.github+json',
+    'Content-Type':  'application/json',
+  };
+}
+
+async function getSha(path) {
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`, { headers: ghH() });
+    if (r.status === 404) return null;
+    return (await r.json()).sha ?? null;
+  } catch { return null; }
+}
+
+async function ghWrite(path, content, msg) {
+  if (!getToken()) { log('⚠ Configurá el token primero', 'err'); return false; }
+  const sha  = await getSha(path);
+  const body = {
+    message: msg || `update: ${path}`,
+    content: btoa(unescape(encodeURIComponent(content))),
+    branch:  GH_BRANCH,
+    ...(sha ? { sha } : {})
+  };
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${path}`,
+      { method: 'PUT', headers: ghH(), body: JSON.stringify(body) }
+    );
+    return r.ok;
+  } catch(e) { log('Error GitHub: ' + e.message, 'err'); return false; }
+}
+
+// ── Mapas ─────────────────────────────────────────────────────────────────────
+let mapaDB  = {};
+let mapaSel = null;
+
+async function cargarMapas() {
+  try {
+    const r = await fetch(MAPAS_URL + '?t=' + Date.now());
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    mapaDB  = await r.json();
+    renderMapGrid();
+    log('Mapas cargados — ' + Object.keys(mapaDB).length, 'ok');
+  } catch(e) { log('Error mapas: ' + e.message, 'err'); }
+}
+
+async function leerMapaActual() {
+  try {
+    const r = await fetch(window.location.origin + '/json/mapa_actual.json?t=' + Date.now());
+    if (!r.ok) return;
+    const estado = await r.json();
+    if (estado.visible && estado.id && estado.id !== '0' && mapaDB[estado.id]) {
+      mostrarMapaActivo(estado.id);
+    }
+  } catch {}
+}
+
+function renderMapGrid() {
+  const grid = document.getElementById('map-grid');
+  grid.innerHTML = '';
+  // Agrupar por categoría
+  const cats = {};
+  for (const [id, m] of Object.entries(mapaDB)) {
+    const c = (m.Categoria || 'Otros').trim();
+    if (!cats[c]) cats[c] = [];
+    cats[c].push({ id, ...m });
+  }
+  let first = true;
+  for (const [cat, mapas] of Object.entries(cats)) {
+    const lbl = document.createElement('div');
+    lbl.className = 'map-cat-label';
+    if (first) { lbl.style.borderTop = 'none'; lbl.style.marginTop = '0'; first = false; }
+    lbl.textContent = cat;
+    grid.appendChild(lbl);
+    for (const m of mapas) {
+      const div = document.createElement('div');
+      div.className     = 'mthumb';
+      div.dataset.mapId = m.id;
+      div.onclick       = () => elegirMapa(m.id);
+      div.innerHTML = `<img src="${m.url}" alt="${m.name}" onerror="this.style.display='none'"/><div class="mthumb-name">${m.name}</div>`;
+      grid.appendChild(div);
+    }
+  }
+}
+
+function elegirMapa(id) {
+  mapaSel = { id, ...mapaDB[id] };
+  document.querySelectorAll('.mthumb').forEach(el => el.classList.remove('sel'));
+  const t = document.querySelector(`.mthumb[data-map-id="${id}"]`);
+  if (t) { t.classList.add('sel'); t.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+  mostrarMapaActivo(id);
+  document.getElementById('btn-publicar-mapa').disabled = false;
+  log('Mapa elegido: ' + mapaDB[id].name, 'info');
+}
+
+function mostrarMapaActivo(id) {
+  if (!mapaDB[id]) return;
+  document.getElementById('map-active-bar').style.display = 'flex';
+  document.getElementById('map-active-img').src   = mapaDB[id].url;
+  document.getElementById('map-active-name').textContent = mapaDB[id].name;
+  document.getElementById('map-active-cat').textContent  = (mapaDB[id].Categoria || '').trim();
+  // Seleccionar thumb visualmente
+  document.querySelectorAll('.mthumb').forEach(el => el.classList.remove('sel'));
+  const t = document.querySelector(`.mthumb[data-map-id="${id}"]`);
+  if (t) t.classList.add('sel');
+  mapaSel = { id, ...mapaDB[id] };
+  document.getElementById('btn-publicar-mapa').disabled = false;
+}
+
+async function publicarMapa() {
+  if (!mapaSel) { log('Elegí un mapa primero', 'err'); return; }
+  const btn = document.getElementById('btn-publicar-mapa');
+  btn.disabled = true; btn.textContent = '⏳ Subiendo...';
+  document.getElementById('map-dot').className = 'dot dot-warn';
+  document.getElementById('map-status').textContent = 'Subiendo...';
+
+  // Escribir JSON completo con todos los datos del mapa
+  const estado = {
+    visible:   true,
+    id:        mapaSel.id,
+    name:      mapaSel.name,
+    url:       mapaSel.url,
+    categoria: (mapaSel.Categoria || '').trim(),
+    ts:        Date.now()
+  };
+  // 1. Servidor WS (instantáneo)
+  const wsOk = await postServidor('/overlay/mapa', estado);
+  // 2. GitHub (persistencia)
+  ghWrite(GH_MAP_PATH, JSON.stringify(estado, null, 2), 'mapa: ' + mapaSel.name);
+
+  if (wsOk) {
+    document.getElementById('map-dot').className = 'dot dot-on';
+    document.getElementById('map-status').textContent = 'En juego: ' + mapaSel.name;
+    log('✓ Mapa publicado (WS): ' + mapaSel.name, 'ok');
+  } else {
+    document.getElementById('map-dot').className = 'dot dot-warn';
+    document.getElementById('map-status').textContent = 'Solo GitHub (WS offline)';
+    log('Mapa via GitHub solamente', 'warn');
+  }
+  btn.disabled = false; btn.textContent = '🗺 Publicar en overlay';
+}
+
+async function ocultarMapa() {
+  const estado = { visible: false, id: '0', name: '', url: '', categoria: '', ts: Date.now() };
+  postServidor('/overlay/mapa', estado);
+  ghWrite(GH_MAP_PATH, JSON.stringify(estado, null, 2), 'mapa: hide');
+  document.getElementById('map-dot').className = 'dot dot-off';
+  document.getElementById('map-status').textContent = 'Overlay de mapa oculto';
+  log('Mapa ocultado', 'info');
+}
+
+// ── Stats overlay ─────────────────────────────────────────────────────────────
+let DATA = null, indice = {}, sel = {1:null, 2:null}, modo = 'pre';
+
+async function cargarStats() {
+  try {
+    const r = await fetch(STATS_URL + '?t=' + Date.now());
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    DATA = await r.json();
+    indice = {};
+    for (const [did, j] of Object.entries(DATA.jugadores)) {
+      const clean = j.nick.replace(/[|\[\]]/g,'').trim();
+      const lower = clean.toLowerCase();
+      const keys  = new Set([lower, did]);
+      lower.split(/[\s/|]+/).filter(p=>p.length>1).forEach(p=>keys.add(p));
+      const s = lower.replace(/^(fmg\s*|twitch\/)/g,'');
+      if (s.length>1) keys.add(s);
+      keys.forEach(k => { indice[k] = { ...j, discordId: did }; });
+    }
+    log(`Stats OK — ${Object.keys(DATA.jugadores).length} jugadores`, 'ok');
+  } catch(e) {
+    log('Sin stats: ' + e.message, 'warn');
+    DATA = { jugadores:{}, meta:{total_partidas:0} };
+  }
+}
+
+function buscar(num) {
+  const val   = document.getElementById(`j${num}-input`).value.trim().toLowerCase();
+  const sugEl = document.getElementById(`j${num}-sug`);
+  sel[num]    = null;
+  if (val.length < 2) {
+    sugEl.style.display = 'none';
+    document.getElementById(`j${num}-preview`).innerHTML = '<div class="preview-empty">Escribí un nick para buscar</div>';
+    return;
+  }
+  const seen = new Set(), matches = [];
+  for (const [k, j] of Object.entries(indice)) {
+    if (k.includes(val) && !seen.has(j.discordId)) { seen.add(j.discordId); matches.push(j); }
+  }
+  if (!matches.length) {
+    sugEl.style.display = 'none';
+    document.getElementById(`j${num}-preview`).innerHTML = '<div class="preview-empty" style="color:#804040">Sin resultados</div>';
+    sel[num] = { nick: document.getElementById(`j${num}-input`).value.trim(), global:{pj:0,pg:0,pp:0,winrate:0}, civs:{}, mapas:{} };
+    return;
+  }
+  if (matches.length === 1) { seleccionar(num, matches[0]); sugEl.style.display = 'none'; }
+  else {
+    sugEl.innerHTML = matches.slice(0,5).map(j =>
+      `<div class="sug-item" onclick='selById(${num},"${j.discordId}")'>${j.nick.replace(/[|\[\]]/g,'').trim()}</div>`
+    ).join('');
+    sugEl.style.display = 'block';
+  }
+}
+
+function selById(num, did) { seleccionar(num, indice[did]); }
+
+function seleccionar(num, j) {
+  sel[num] = j;
+  document.getElementById(`j${num}-sug`).style.display = 'none';
+  document.getElementById(`j${num}-input`).value = j.nick.replace(/[|\[\]]/g,'').trim();
+  document.getElementById(`j${num}-preview`).innerHTML = buildPreview(j);
+}
+
+function buildPreview(j) {
+  const wr   = j.global?.winrate ?? 0;
+  const col  = wr >= 60 ? '#a8c860' : wr >= 40 ? '#e8c87a' : '#c87060';
+  const top3 = Object.entries(j.civs ?? {}).sort((a,b)=>b[1].pj-a[1].pj).slice(0,3);
+  const topM = Object.entries(j.mapas ?? {}).sort((a,b)=>b[1].winrate-a[1].winrate).slice(0,1);
+  return `
+    <div class="pv-nick">${j.nick.replace(/[|\[\]]/g,'').trim()}</div>
+    <div class="pv-row"><span class="pv-label">Winrate</span><span style="color:${col};font-weight:600">${wr}%</span></div>
+    <div class="pv-row"><span class="pv-label">Partidas</span><span style="color:#e8c87a">${j.global?.pj??0}</span></div>
+    ${top3.map(([c,d])=>`<div class="pv-row"><span class="pv-label">${c}</span><span style="color:${d.winrate>=50?'#a8c860':'#c87060'}">${d.winrate}% (${d.pj}g)</span></div>`).join('')}
+    ${topM.length?`<div class="pv-row"><span class="pv-label">Mejor mapa</span><span style="color:#a8c860">${topM[0][0]}</span></div>`:''}
+  `;
+}
+
+function setModo(m, btn) {
+  modo = m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Enviar via WebSocket server (instantáneo) + GitHub (fallback persistencia)
+async function postServidor(endpoint, data) {
+  try {
+    const r = await fetch(WS_SERVER + endpoint, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(data)
+    });
+    return r.ok;
+  } catch(e) {
+    log('Servidor no disponible: ' + e.message, 'warn');
+    return false;
+  }
+}
+
+async function enviarStats() {
+  if (!sel[1] && !sel[2]) { log('Seleccioná al menos un jugador', 'err'); return; }
+  const torneo = document.getElementById('enc-torneo').value.trim() || 'Copa Uruguaya 2026';
+  localStorage.setItem('torneoNombre', torneo);
+  const state = {
+    visible: true, modo,
+    torneo,
+    grupo:   document.getElementById('enc-grupo').value.trim() || '?',
+    ronda:   document.getElementById('enc-ronda').value.trim() || '?',
+    formato: document.getElementById('enc-formato').value,
+    j1: sel[1] ?? null, j2: sel[2] ?? null,
+    ts: Date.now(),
+  };
+  const n1 = sel[1]?.nick?.replace(/[|\[\]]/g,'').trim() ?? '?';
+  const n2 = sel[2]?.nick?.replace(/[|\[\]]/g,'').trim() ?? '?';
+  setSt('warn', 'Enviando...');
+
+  // 1. Servidor WebSocket (instantáneo)
+  const wsOk = await postServidor('/overlay/update', state);
+
+  // 2. GitHub (persistencia — overlay se recupera si recarga)
+  ghWrite(GH_STATS_PATH, JSON.stringify(state, null, 2), 'overlay: ' + n1 + ' vs ' + n2);
+
+  if (wsOk) {
+    setSt('on', 'Activo — ' + n1 + ' vs ' + n2 + ' · ' + modo);
+    log('✓ Stats enviadas (WS): ' + n1 + ' vs ' + n2, 'ok');
+  } else {
+    setSt('warn', 'Solo GitHub (WS offline)');
+    log('Stats via GitHub solamente', 'warn');
+  }
+}
+
+async function ocultarStats() {
+  setSt('warn', 'Ocultando...');
+  const state = { visible: false, ts: Date.now() };
+  await postServidor('/overlay/update', state);
+  ghWrite(GH_STATS_PATH, JSON.stringify(state, null, 2), 'overlay: hide');
+  setSt('off', 'Overlay oculto'); log('Stats ocultadas', 'info');
+}
+
+async function resetearStats() {
+  setSt('warn', 'Reseteando...');
+  const state = { visible: false, reset: true, ts: Date.now() };
+  await postServidor('/overlay/update', state);
+  ghWrite(GH_STATS_PATH, JSON.stringify(state, null, 2), 'overlay: reset');
+  setSt('off', 'Reset OK'); log('Reset', 'warn');
+}
+
+function setSt(tipo, texto) {
+  document.getElementById('st-dot').className    = 'dot dot-' + tipo;
+  document.getElementById('st-text').textContent = texto;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  // Recordar el nombre del torneo entre sesiones
+  const torneoGuardado = localStorage.getItem('torneoNombre');
+  if (torneoGuardado) document.getElementById('enc-torneo').value = torneoGuardado;
+
+  // Cargar GH token desde servidor automáticamente
+  const ghTok = await getGHToken();
+  if (ghTok) {
+    document.getElementById('gh-token').value = '●'.repeat(20);
+    setTokenUI(true);
+    log('🔑 GH Token cargado desde servidor', 'ok');
+  }
+
+  // Token buttons (por si el usuario quiere sobreescribir manualmente)
+  document.getElementById('btn-guardar-token').addEventListener('click', guardarToken);
+  document.getElementById('btn-borrar-token').addEventListener('click', borrarToken);
+
+  await Promise.all([cargarStats(), cargarMapas()]);
+  await leerMapaActual();
+});
+</script>
+</body>
+</html>

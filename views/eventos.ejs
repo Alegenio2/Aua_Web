@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eventos — AUA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <link rel="preload" as="style" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'; this.onload=null;" />
+  <link rel="icon" href="/img/favicon-32x32.png" type="image/png" />
+  <style>
+    /* Hero */
+    .eventos-hero {
+      padding: 64px 24px 48px;
+      text-align: center;
+      position: relative;
+    }
+    .eventos-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 80% at 50% 0%, rgba(232,200,122,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 90% 100%, rgba(90,158,114,0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .eventos-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(26px, 4vw, 44px);
+      color: var(--gold);
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .eventos-sub {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .hero-divider {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; margin-bottom: 0;
+    }
+    .hero-divider::before, .hero-divider::after {
+      content: ''; flex: 1; max-width: 120px; height: 0.5px;
+      background: linear-gradient(to right, transparent, var(--gold));
+    }
+    .hero-divider::after { transform: scaleX(-1); }
+    .hero-diamond {
+      width: 7px; height: 7px;
+      background: var(--gold);
+      clip-path: polygon(50% 0%,100% 50%,50% 100%,0% 50%);
+    }
+
+    /* Layout */
+    .eventos-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 64px;
+    }
+
+    /* Contador */
+    .eventos-count {
+      font-size: 11px; color: var(--dim); letter-spacing: 2px;
+      text-transform: uppercase; margin-bottom: 24px;
+    }
+    .eventos-count strong { color: var(--muted); }
+
+    /* Grid */
+    .event-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+
+    /* Card */
+    .event-card {
+      background: var(--bg2);
+      border: 0.5px solid var(--brown);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.2s, transform 0.2s;
+      position: relative;
+    }
+    .event-card:hover {
+      border-color: rgba(232,200,122,0.25);
+      transform: translateY(-2px);
+    }
+    .event-card.jugando {
+      border-left: 2px solid var(--jade);
+    }
+    .event-card.inscripcion {
+      border-left: 2px solid var(--gold);
+    }
+
+    /* Card top bar */
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--bg3);
+      border-bottom: 0.5px solid var(--brown);
+    }
+    .status-dot {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 10px; letter-spacing: 1px; font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-dot i { font-size: 7px; }
+    .status-dot.jugando { color: var(--jade); }
+    .status-dot.inscripcion { color: var(--gold); }
+    .card-tipo {
+      font-size: 10px; color: var(--dim);
+      background: var(--bg2);
+      border: 0.5px solid var(--brown);
+      padding: 2px 8px; border-radius: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Card body */
+    .card-body { padding: 18px 18px 14px; flex: 1; }
+    .card-nombre {
+      font-family: 'Cinzel', serif;
+      font-size: 16px; color: var(--text);
+      margin-bottom: 6px; line-height: 1.3;
+    }
+    .card-formato {
+      font-size: 11px; color: var(--dim);
+      letter-spacing: 0.5px; margin-bottom: 16px;
+      text-transform: capitalize;
+    }
+
+    /* Pills */
+    .card-pills {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-bottom: 18px;
+    }
+    .cpill {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; color: var(--muted);
+      background: rgba(232,200,122,0.05);
+      border: 0.5px solid rgba(232,200,122,0.14);
+      border-radius: 16px; padding: 4px 10px;
+    }
+    .cpill i { color: var(--gold); font-size: 10px; }
+    .cpill.jade-pill { background: rgba(90,158,114,0.06); border-color: rgba(90,158,114,0.2); }
+    .cpill.jade-pill i { color: var(--jade); }
+
+    /* ELO range bar */
+    .elo-range {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: var(--muted); margin-bottom: 18px;
+    }
+    .elo-range-label { color: var(--dim); font-size: 10px; letter-spacing: 0.5px; }
+    .elo-range-val { font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold2); }
+
+    /* Acciones */
+    .card-actions {
+      display: flex; gap: 8px;
+      padding: 12px 18px;
+      border-top: 0.5px solid var(--brown);
+      background: var(--bg3);
+    }
+    .btn-primary {
+      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 9px 14px; border-radius: 8px;
+      background: var(--gold); color: var(--bg0);
+      font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+      text-decoration: none; transition: all 0.18s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); }
+    .btn-primary.jade { background: var(--jade); }
+    .btn-primary.jade:hover { background: #6ab882; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 9px 14px; border-radius: 8px;
+      background: transparent;
+      border: 0.5px solid rgba(232,200,122,0.28);
+      color: var(--gold); font-size: 12px; font-weight: 500;
+      text-decoration: none; transition: all 0.18s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-secondary:hover { background: var(--gold-dim); transform: translateY(-1px); }
+
+    /* Empty */
+    .empty-box {
+      text-align: center; padding: 64px 32px;
+      background: var(--bg2); border: 0.5px solid var(--brown);
+      border-radius: 14px; color: var(--muted);
+    }
+    .empty-box i { font-size: 32px; color: var(--dim); margin-bottom: 16px; display: block; }
+    .empty-box p { font-size: 13px; line-height: 1.7; }
+    .empty-box a { color: var(--gold); text-decoration: none; }
+    .empty-box a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      .event-grid { grid-template-columns: 1fr; }
+      .eventos-wrap { padding: 24px 16px 48px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="header-logo" href="/">
+    <span class="logo-icon">⚔</span>
+    <span class="logo-text">AUA</span>
+  </a>
+  <nav>
+    <a class="active" href="/eventos">Eventos</a>
+    <a href="/torneos">Salón de la Fama</a>
+    <a href="/copa_stats">📊 Stats</a>
+  </nav>
+  <div class="header-actions">
+    <% if (user) { %>
+      <a href="/dashboard" class="nav-user" title="Ir al dashboard">
+        <% if (user.image) { %><img src="<%= user.image %>" alt="Avatar" class="nav-avatar" /><% } %>
+        <span><%= user.name %></span>
+      </a>
+      <form method="POST" action="/auth/logout" style="display:inline;margin:0">
+        <button type="submit" class="nav-logout-btn" title="Cerrar sesión">✕</button>
+      </form>
+    <% } else { %>
+      <a href="/auth/discord" class="nav-discord-btn"><i class="fab fa-discord"></i>Ingresar</a>
+    <% } %>
+  </div>
+</header>
+
+<div class="eventos-hero">
+  <h1 class="eventos-title">Eventos</h1>
+  <div class="eventos-sub">Torneos activos de la comunidad</div>
+  <div class="hero-divider"><div class="hero-diamond"></div></div>
+</div>
+
+<div class="eventos-wrap">
+  <% if (!activeTournaments || activeTournaments.length === 0) { %>
+  <div class="empty-box">
+    <i class="fas fa-shield-halved"></i>
+    <p>No hay torneos activos en este momento.<br>
+    Volvé más tarde o consultá el <a href="/torneos">Salón de la Fama</a>.</p>
+  </div>
+  <% } else { %>
+
+  <div class="eventos-count">
+    <strong><%= activeTournaments.length %></strong> torneo<%= activeTournaments.length !== 1 ? 's' : '' %> activo<%= activeTournaments.length !== 1 ? 's' : '' %>
+    — <strong><%= activeTournaments.filter(t => t.estado === 'jugando').length %></strong> en curso
+    · <strong><%= activeTournaments.filter(t => t.estado === 'inscripcion').length %></strong> en inscripción
+  </div>
+
+  <div class="event-grid">
+    <% activeTournaments.forEach(t => {
+      const enCurso = t.estado === 'jugando';
+      const formato = t.formato.replace(/_/g, ' ');
+    %>
+    <article class="event-card <%= enCurso ? 'jugando' : 'inscripcion' %>">
+
+      <div class="card-top">
+        <span class="status-dot <%= enCurso ? 'jugando' : 'inscripcion' %>">
+          <i class="fas fa-circle"></i>
+          <%= enCurso ? 'En curso' : 'Inscripción abierta' %>
+        </span>
+        <span class="card-tipo"><%= t.tipo %></span>
+      </div>
+
+      <div class="card-body">
+        <div class="card-nombre"><%= t.nombre %></div>
+        <div class="card-formato"><%= formato %></div>
+
+        <div class="card-pills">
+          <div class="cpill <%= enCurso ? 'jade-pill' : '' %>">
+            <i class="fas fa-users"></i>
+            <%= t.inscriptos %> jugadores
+          </div>
+          <div class="cpill">
+            <i class="fas fa-chess-rook"></i>
+            ELO <%= t.elo_min %> – <%= t.elo_max %>
+          </div>
+          <% if (t.costo_inscripcion > 0) { %>
+          <div class="cpill">
+            <i class="fas fa-coins"></i>
+            $<%= t.costo_inscripcion %>
+          </div>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <a href="/torneo/<%= t.slug %>" class="btn-primary <%= enCurso ? 'jade' : '' %>">
+          <i class="fas fa-<%= enCurso ? 'sitemap' : 'plus' %>"></i>
+          <%= enCurso ? 'Ver torneo' : 'Inscribirse' %>
+        </a>
+        <a href="/penca/<%= t.slug %>" class="btn-secondary">
+          <i class="fas fa-star"></i>
+          Penca
+        </a>
+      </div>
+
+    </article>
+    <% }) %>
+  </div>
+  <% } %>
+</div>
+
+<footer>
+  <div class="footer-logo">AUA</div>
+  <div class="footer-text">Asociación Uruguaya de Age of Empires II</div>
+  <div class="footer-links">
+    <a href="https://www.twitch.tv/jabsuy" target="_blank" title="Twitch"><i class="fab fa-twitch"></i></a>
+    <a href="https://www.youtube.com/@jabsuy" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
+    <a href="https://www.instagram.com/fumage_" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+    <a href="https://discord.gg/3xeSRaQxDE" target="_blank" title="Discord"><i class="fab fa-discord"></i></a>
+  </div>
+</footer>
+
+</body>
+</html>

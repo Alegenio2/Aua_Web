@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Civ Banner — AUA</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+}
+
+:root {
+    --gold:   #e8c87a;
+    --gold2:  #c8a040;
+    --gold3:  #f0d890;
+    --bg:     #0e0906;
+    --wood:   #1a1008;
+    --border: #6a4a18;
+    --border2: #3a2808;
+    --host:   #6aaae8;
+    --guest:  #e86a8a;
+    --win:    #a8c860;
+    --text:   #e8e0d0;
+    --dim:    #8a7050;
+}
+
+@keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes slideUp   { from { transform: translateY(0);     opacity: 1; } to { transform: translateY(-100%); opacity: 0; } }
+@keyframes shimmer   { 0%,100%{ opacity:.85 } 50%{ opacity:1 } }
+@keyframes pulse     { 0%,100%{ box-shadow: 0 0 0px var(--gold2) } 50%{ box-shadow: 0 0 14px rgba(200,160,64,.35) } }
+
+/* ── Banner — debajo de la barra de tecnologías ── */
+.banner {
+    position: absolute;
+    top: 130px; left: 0; right: 0;
+    height: 160px;
+    display: none;
+}
+.banner.visible   { display: flex; flex-direction: column; animation: slideDown .55s cubic-bezier(.22,.61,.36,1) both; }
+.banner.hiding    { display: flex; flex-direction: column; animation: slideUp .45s ease-in both; }
+
+/* Marco exterior: simula madera tallada con gradientes */
+.frame-outer {
+    flex: 1;
+    background:
+        linear-gradient(180deg, rgba(42,26,6,.55) 0%, rgba(14,8,4,.65) 40%, rgba(14,8,4,.65) 60%, rgba(42,26,6,.55) 100%);
+    border-bottom: 3px solid #8a6020;
+    box-shadow:
+        inset 0 -2px 0 rgba(232,200,80,.08),
+        0 4px 20px rgba(0,0,0,.5);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Ribete dorado interior */
+.frame-outer::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px solid rgba(200,160,64,.25);
+    border-radius: 2px;
+    pointer-events: none;
+}
+
+/* Esquinas decorativas */
+.corner {
+    position: absolute;
+    width: 40px; height: 40px;
+    color: var(--gold2);
+    font-size: 28px;
+    line-height: 1;
+    pointer-events: none;
+    z-index: 10;
+    opacity: .6;
+}
+.corner-tl { bottom: 4px; left: 4px;  }
+.corner-tr { bottom: 4px; right: 4px; transform: scaleX(-1); }
+
+/* ── Título ── */
+.banner-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 40px 6px;
+    gap: 18px;
+    position: relative;
+}
+.title-deco {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(200,160,64,.5), transparent);
+}
+.title-deco.right {
+    background: linear-gradient(to left, transparent, rgba(200,160,64,.5), transparent);
+}
+.banner-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 15px;
+    color: var(--gold);
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    animation: shimmer 4s infinite;
+    white-space: nowrap;
+    text-shadow: 0 0 20px rgba(200,160,64,.3);
+}
+.banner-tag {
+    position: absolute;
+    right: 24px;
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 0.5px solid var(--border2);
+    padding: 3px 8px;
+    border-radius: 2px;
+    background: rgba(20,12,4,.8);
+}
+
+/* ── Cuerpo principal: 3 zonas ── */
+.banner-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 140px 1fr;
+    align-items: center;
+    padding: 0 40px 8px;
+    gap: 0;
+}
+
+/* Zona jugador */
+.player-zone {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.player-zone.right { align-items: flex-end; }
+
+.player-name {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+.player-name.host  { color: var(--host);  text-shadow: 0 0 15px rgba(106,170,232,.25); }
+.player-name.guest { color: var(--guest); text-shadow: 0 0 15px rgba(232,106,138,.25); }
+
+.civs-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+.player-zone.right .civs-row { justify-content: flex-end; }
+
+/* Civ card */
+.civ-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+.civ-circle {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 2px solid rgba(200,160,64,.2);
+    background: radial-gradient(circle at 40% 35%, #2a1a0a, #0e0804);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    position: relative;
+    transition: transform .18s;
+    animation: pulse 3s infinite;
+}
+.civ-circle:hover { transform: scale(1.05); }
+.civ-circle.host-pick  { border-color: var(--host);  box-shadow: 0 0 12px rgba(106,170,232,.25); animation: none; }
+.civ-circle.guest-pick { border-color: var(--guest); box-shadow: 0 0 12px rgba(232,106,138,.25); animation: none; }
+.civ-circle.empty {
+    border-color: var(--border2);
+    opacity: .3;
+}
+
+.civ-img { width: 60px; height: 60px; object-fit: cover; border-radius: 50%; }
+
+.civ-won { border-color: var(--win) !important; box-shadow: 0 0 10px rgba(168,200,96,.35); }
+.status-image {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    width: 90px; height: 40px; z-index: 2;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.8));
+}
+
+.civ-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    max-width: 80px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.civ-label.dim { color: var(--dim); }
+
+/* ── VS central ── */
+.vs-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.vs-line {
+    width: 1px;
+    height: 50px;
+    background: linear-gradient(to bottom, transparent, rgba(200,160,64,.35), transparent);
+}
+.vs-text {
+    font-family: 'Cinzel', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--gold2);
+    letter-spacing: 4px;
+    opacity: .6;
+}
+.vs-ronda {
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+<div class="banner" id="banner">
+  <div class="frame-outer">
+    <div class="corner corner-tl">✦</div>
+    <div class="corner corner-tr">✦</div>
+
+    <!-- Tag 1v1/2v2 — sin título -->
+    <div style="position:relative;height:0">
+      <div class="banner-tag" id="bannerTag">1v1</div>
+    </div>
+
+    <!-- Cuerpo -->
+    <div class="banner-body">
+
+      <!-- Host -->
+      <div class="player-zone" id="hostZone">
+        <div class="player-name host" id="hostName">Host</div>
+        <div class="civs-row" id="hostCivs"></div>
+      </div>
+
+      <!-- VS -->
+      <div class="vs-zone">
+        <div class="vs-line"></div>
+        <div class="vs-text">VS</div>
+        <div class="vs-ronda" id="vsRonda"></div>
+        <div class="vs-line"></div>
+      </div>
+
+      <!-- Guest -->
+      <div class="player-zone right" id="guestZone">
+        <div class="player-name guest" id="guestName">Guest</div>
+        <div class="civs-row" id="guestCivs"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config ───────────────────────────────────────────────────────────────────
+const SHOW_MS    = 60_000;        // 30 segundos visible
+const CYCLE_MS   = 5 * 60_000;  // cada 15 minutos
+const WS_SERVER  = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+const DRAFT_URL  = location.origin + '/api/overlay/draft';
+
+let _state      = {};
+let lastTs      = null;
+let wsConnected = false;
+let hideTimer   = null;
+let cycleTimer  = null;
+
+// ── Helpers datos ─────────────────────────────────────────────────────────────
+const civDetails  = () => JSON.parse(localStorage.getItem('civilizations') || '[]');
+const getCivsData = () => _state.civsData   || JSON.parse(localStorage.getItem('civsData')   || '[]');
+const getNeutral  = () => _state.neutralCivs|| JSON.parse(localStorage.getItem('neutralCivs')|| '[]');
+const getNames    = () => _state.draftNames || JSON.parse(localStorage.getItem('draftNames') || '{}');
+const isSwapped   = () => _state.civSwapped ?? (localStorage.getItem('civSwapped') === 'true');
+
+function resolvePlayer(p, sw) {
+  if (p === 'NONE') return 'NONE';
+  if (!sw) return p;
+  return p === 'HOST' ? 'GUEST' : 'HOST';
+}
+
+function civDetail(name) {
+  return civDetails().find(d => d.id === name) || null;
+}
+
+// ── Render civ card ───────────────────────────────────────────────────────────
+function makeCivCard(civ, side) {
+  const detail = civ ? civDetail(civ.name) : null;
+  const wrap   = document.createElement('div');
+  wrap.className = 'civ-card';
+
+  const circle = document.createElement('div');
+  circle.className = `civ-circle ${civ ? side + '-pick' : 'empty'}`;
+
+  if (civ?.won) {
+    const w = document.createElement('img');
+    w.src = 'img/gano.svg'; w.className = 'status-image'; w.alt = 'W';
+    circle.appendChild(w);
+    circle.classList.add('civ-won');
+  }
+  if (civ?.lost) {
+    const l = document.createElement('img');
+    l.src = 'img/perdio.svg'; l.className = 'status-image'; l.alt = 'L';
+    circle.appendChild(l);
+  }
+
+  if (civ && detail?.imagen) {
+    const img = document.createElement('img');
+    img.className = 'civ-img';
+    img.src = detail.imagen;
+    img.alt = detail.nombre || civ.name;
+    img.onerror = () => img.style.display = 'none';
+    circle.appendChild(img);
+  }
+
+  const label = document.createElement('div');
+  label.className = `civ-label${civ ? '' : ' dim'}`;
+  label.textContent = civ ? (detail?.nombre || civ.name) : '—';
+
+  wrap.appendChild(circle);
+  wrap.appendChild(label);
+  return wrap;
+}
+
+// ── Render principal ──────────────────────────────────────────────────────────
+function render() {
+  const sw    = isSwapped();
+  const names = getNames();
+  const civs  = Array.isArray(getCivsData()) ? getCivsData() : [];
+
+  // Nombres
+  const civsRaw  = civs;
+  const hostName  = sw ? (names.civGuest || civsRaw.guestName || 'Guest') : (names.civHost  || civsRaw.hostName  || 'Host');
+  const guestName = sw ? (names.civHost  || civsRaw.hostName  || 'Host')  : (names.civGuest || civsRaw.guestName || 'Guest');
+
+  document.getElementById('hostName').textContent  = hostName;
+  document.getElementById('guestName').textContent = guestName;
+
+  // Separar picks por side
+  const hostPicks  = [];
+  const guestPicks = [];
+
+  civs.forEach(c => {
+    if (c.actionType !== 'pick') return;
+    const side = resolvePlayer(c.player, sw);
+    if (side === 'HOST')  hostPicks.push(c);
+    if (side === 'GUEST') guestPicks.push(c);
+  });
+
+  // Detectar 2v2 (≥2 picks por lado)
+  const maxPicks = Math.max(hostPicks.length, guestPicks.length);
+  const es2v2    = maxPicks >= 2;
+  document.getElementById('bannerTag').textContent = es2v2 ? '2v2' : '1v1';
+
+  // Renderizar civs
+  const hostEl  = document.getElementById('hostCivs');
+  const guestEl = document.getElementById('guestCivs');
+  hostEl.innerHTML  = '';
+  guestEl.innerHTML = '';
+
+  const slots = Math.max(maxPicks, es2v2 ? 2 : 1);
+  for (let i = 0; i < slots; i++) {
+    hostEl.appendChild(makeCivCard(hostPicks[i]  || null, 'host'));
+    guestEl.appendChild(makeCivCard(guestPicks[i] || null, 'guest'));
+  }
+}
+
+// ── Mostrar / ocultar banner ──────────────────────────────────────────────────
+function showBanner() {
+  const banner = document.getElementById('banner');
+  if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+
+  banner.classList.remove('hiding');
+  banner.classList.add('visible');
+
+  hideTimer = setTimeout(() => {
+    banner.classList.remove('visible');
+    banner.classList.add('hiding');
+    setTimeout(() => banner.classList.remove('hiding'), 500);
+  }, SHOW_MS);
+}
+
+// ── Aplicar estado del servidor ───────────────────────────────────────────────
+function aplicarState(data) {
+  if (data.ts !== lastTs) {
+    lastTs = data.ts;
+    _state = data;
+    render();
+    showBanner(); // mostrar inmediatamente cuando cambia el draft
+  }
+}
+
+// ── WebSocket ─────────────────────────────────────────────────────────────────
+function conectarWS() {
+  try {
+    const ws = new WebSocket(WS_SERVER + '/ws?canal=draft');
+    ws.onopen    = () => { wsConnected = true; };
+    ws.onmessage = e => { try { aplicarState(JSON.parse(e.data)); } catch {} };
+    ws.onclose   = () => { wsConnected = false; setTimeout(conectarWS, 5000); };
+    ws.onerror   = () => ws.close();
+  } catch {}
+}
+
+async function poll() {
+  if (wsConnected) return;
+  try {
+    const r = await fetch(DRAFT_URL + '?t=' + Date.now());
+    if (r.ok) aplicarState(await r.json());
+  } catch {}
+}
+
+// ── localStorage sync ─────────────────────────────────────────────────────────
+window.addEventListener('storage', e => {
+  if (['civsData','neutralCivs','draftNames','civSwapped'].includes(e.key)) {
+    _state = {}; render(); showBanner();
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  // Cargar civs.json si no está en cache
+  if (!localStorage.getItem('civilizations')) {
+    try {
+      const r = await fetch('https://raw.githubusercontent.com/Alegenio2/civs/refs/heads/main/civs.json');
+      localStorage.setItem('civilizations', JSON.stringify(await r.json()));
+    } catch {}
+  }
+
+  render();
+
+  // Mostrar una vez al cargar si hay datos
+  const hayCivs = (getCivsData() || []).some(c => c.actionType === 'pick');
+  if (hayCivs) showBanner();
+
+  // Ciclo de 15 minutos
+  cycleTimer = setInterval(() => {
+    render();
+    showBanner();
+  }, CYCLE_MS);
+
+  conectarWS();
+  setInterval(poll, 3000);
+}
+
+init();
+</script>
+</body>
+</html>

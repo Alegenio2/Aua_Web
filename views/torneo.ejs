@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= torneo.nombre %> — AUA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'; this.onload=null;" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    /* Hero */
+    .torneo-hero { padding: 60px 24px 40px; text-align: center; position: relative; }
+    .torneo-hero::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 50% 0%, rgba(232,200,122,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 100% 100%, rgba(90,158,114,0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .torneo-title { font-family:'Cinzel Decorative',serif; font-size: clamp(22px,4vw,46px); color: var(--gold); margin-bottom: 8px; }
+    .hero-sub { font-family:'Cinzel',serif; font-size: 11px; color: var(--dim); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 22px; }
+    .hero-divider { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 22px; }
+    .hero-divider::before, .hero-divider::after { content: ''; flex: 1; max-width: 140px; height: 0.5px; background: linear-gradient(to right, transparent, var(--gold)); }
+    .hero-divider::after { transform: scaleX(-1); }
+    .hero-diamond { width: 7px; height: 7px; background: var(--gold); clip-path: polygon(50% 0%,100% 50%,50% 100%,0% 50%); }
+    .hero-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 26px; }
+    .pill { display: flex; align-items: center; gap: 6px; background: rgba(232,200,122,0.06); border: 0.5px solid rgba(232,200,122,0.18); border-radius: 20px; padding: 5px 14px; font-size: 12px; color: var(--muted); }
+    .pill i { color: var(--gold); font-size: 11px; }
+    .quick-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .ql-btn { display: flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 8px; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-decoration: none; text-transform: uppercase; transition: all 0.18s; cursor: pointer; border: none; font-family: 'Inter',sans-serif; }
+    .ql-primary { background: var(--gold); color: var(--bg0); }
+    .ql-primary:hover { background: #f5d98a; transform: translateY(-1px); }
+    .ql-secondary { background: transparent; border: 0.5px solid rgba(232,200,122,0.3); color: var(--gold); }
+    .ql-secondary:hover { background: rgba(232,200,122,0.07); transform: translateY(-1px); }
+
+    /* Section layout */
+    .section { max-width: 1280px; margin: 0 auto; padding: 0 24px 56px; }
+    .section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+    .section-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(232,200,122,0.07); border: 0.5px solid rgba(232,200,122,0.2); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+    .section-title { font-family:'Cinzel',serif; font-size: 14px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; }
+    .section-sub { font-size: 11px; color: var(--dim); letter-spacing: 1px; margin-top: 2px; }
+    .section-line { flex: 1; height: 0.5px; background: linear-gradient(to right, rgba(232,200,122,0.2), transparent); }
+
+    /* Tabs */
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; align-items: center; }
+    .tab-btn { padding: 7px 16px; border-radius: 6px; font-size: 11px; font-weight: 500; letter-spacing: 1px; cursor: pointer; transition: all 0.18s; background: var(--bg2); border: 0.5px solid var(--brown); color: var(--dim); font-family: 'Inter',sans-serif; text-transform: uppercase; }
+    .tab-btn:hover { border-color: var(--gold2); color: var(--muted); }
+    .tab-btn.active { background: rgba(232,200,122,0.08); border-color: rgba(232,200,122,0.4); color: var(--gold); }
+    .tab-spacer { flex: 1; }
+
+    /* Grupos grid */
+    /*.grupos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }*/
+    .grupo-card { background: var(--bg2); border: 0.5px solid var(--brown); border-radius: 10px; overflow: hidden; transition: border-color 0.2s; }
+    .grupo-card:hover { border-color: rgba(232,200,122,0.25); }
+    .grupo-card-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; background: var(--bg3); border-bottom: 0.5px solid var(--brown); }
+    .grupo-nombre { font-family:'Cinzel',serif; font-size: 12px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; }
+    .grupo-badge { font-size: 9px; letter-spacing: 1px; color: var(--dim); background: var(--bg2); border: 0.5px solid var(--brown); padding: 2px 8px; border-radius: 10px; }
+
+    /* Tabla posiciones */
+    .tabla-pos { width: 100%; border-collapse: collapse; }
+    .tabla-pos th { font-size: 8px; letter-spacing: 1.5px; color: var(--dim); text-transform: uppercase; padding: 7px 8px; border-bottom: 0.5px solid var(--brown); text-align: center; }
+    .tabla-pos th:first-child { text-align: left; }
+    .tabla-pos td { padding: 8px 8px; font-size: 12px; border-bottom: 0.5px solid rgba(58,42,26,0.5); text-align: center; }
+    .tabla-pos tr:last-child td { border-bottom: none; }
+    .tabla-pos td:first-child { text-align: left; }
+    .tabla-pos tbody tr { transition: background 0.15s; }
+    .tabla-pos tbody tr:hover { background: rgba(232,200,122,0.03); }
+    .tabla-pos tbody tr.clasificado td:first-child { border-left: 2px solid var(--gold); }
+    .tabla-pos tbody tr.clasificado .pos-num { color: var(--gold); font-weight: 700; }
+    .pos-num { font-family:'Cinzel',serif; font-size: 11px; color: var(--dim); margin-right: 4px; }
+    .nick-text { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; display: inline-block; vertical-align: middle; }
+    .pts-cell { font-family:'Cinzel',serif; font-size: 13px; font-weight: 700; color: var(--gold); }
+    .elo-sm { font-size: 10px; color: var(--dim); background: rgba(58,42,26,0.4); padding: 1px 5px; border-radius: 3px; }
+    .stat-cell { color: var(--muted); font-size: 12px; }
+    .stat-win { color: #a8c860; font-size: 12px; }
+    .stat-loss { color: #c07070; font-size: 12px; }
+
+    /* Partidos view */
+    .grupo-partidos-title { font-family:'Cinzel',serif; font-size: 12px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 0.5px solid var(--brown); }
+    .rondas-wrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .ronda-block { background: var(--bg2); border: 0.5px solid var(--brown); border-radius: 10px; overflow: hidden; }
+    .ronda-header { padding: 9px 16px; background: var(--bg3); border-bottom: 0.5px solid var(--brown); }
+    .ronda-label { font-family:'Cinzel',serif; font-size: 10px; color: var(--gold2); letter-spacing: 2px; text-transform: uppercase; }
+    .partido-row { display: flex; align-items: center; padding: 11px 14px; border-bottom: 0.5px solid rgba(58,42,26,0.4); gap: 8px; flex-wrap: wrap; }
+    .partido-row:last-child { border-bottom: none; }
+    .p-j1 { flex: 1; text-align: right; font-size: 12px; color: var(--text); min-width: 80px; }
+    .p-j2 { flex: 1; text-align: left; font-size: 12px; color: var(--text); min-width: 80px; }
+    .p-j1.winner, .p-j2.winner { color: #a8c860; font-weight: 600; }
+    .p-score-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .p-score { display: flex; align-items: center; gap: 5px; font-family:'Cinzel',serif; font-size: 13px; font-weight: 700; min-width: 52px; justify-content: center; }
+    .p-score .s1, .p-score .s2 { color: var(--text); }
+    .p-score .sep { color: var(--brown); font-size: 9px; }
+    .p-score.has-result .won { color: #a8c860; }
+    .p-score.pending { font-size: 10px; letter-spacing: 1px; color: var(--brown); font-family:'Inter',sans-serif; }
+    .p-date-badge { font-size: 9px; color: var(--dim); white-space: nowrap; }
+    .partido-links { display: flex; gap: 4px; justify-content: center; width: 100%; padding-top: 6px; }
+    .p-link { font-size: 9px; padding: 2px 7px; border-radius: 4px; color: var(--dim); border: 0.5px solid var(--brown); text-decoration: none; transition: all 0.15s; white-space: nowrap; }
+    .p-link:hover { color: var(--gold); border-color: var(--gold2); }
+
+    /* Cruces / eliminatoria */
+    .cruce-stage { margin-bottom: 28px; }
+    .cruce-stage-title { font-family:'Cinzel',serif; font-size: 11px; color: var(--gold2); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 0.5px solid var(--brown); }
+    .cruces-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    .cruce-card { background: var(--bg3); border: 0.5px solid var(--brown); border-radius: 8px; padding: 13px 15px; transition: border-color 0.18s; }
+    .cruce-card:hover { border-color: rgba(232,200,122,0.25); }
+    .cruce-num { font-size: 9px; color: var(--dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+    .cruce-j { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; }
+    .cruce-j + .cruce-j { border-top: 0.5px solid var(--brown); }
+    .cruce-nick { font-size: 13px; color: var(--text); }
+    .cruce-nick.tbd { color: #d3802d; font-style: italic; font-size: 12px; }
+    .cruce-nick.winner { color: #a8c860; font-weight: 600; }
+    .cruce-vs { display: flex; align-items: center; justify-content: center; padding: 4px 0; font-size: 9px; color: var(--dim); letter-spacing: 3px; }
+    .cruce-score-num { font-family:'Cinzel',serif; font-size: 13px; font-weight: 700; }
+
+    /* Empty */
+    .empty-msg { background: var(--bg2); border: 0.5px solid var(--brown); border-radius: 10px; padding: 32px; color: var(--muted); text-align: center; font-size: 13px; }
+
+    /* Estado badges */
+    .estado-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 9px; letter-spacing: 1px; font-weight: 600; text-transform: uppercase; }
+    .estado-inscripcion { background: rgba(232,200,122,0.12); color: var(--gold); border: 0.5px solid rgba(232,200,122,0.35); }
+    .estado-jugando { background: rgba(90,158,114,0.12); color: var(--jade); border: 0.5px solid rgba(90,158,114,0.35); }
+    .estado-finalizado { background: rgba(255,255,255,0.04); color: var(--dim); border: 0.5px solid var(--brown); }
+
+    /* Tabla scroll mobile */
+    .tabla-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* Inscritos list */
+    .inscritos-table { width: 100%; border-collapse: collapse; min-width: 340px; }
+    .inscritos-table th { font-size: 9px; letter-spacing: 1.5px; color: var(--dim); text-transform: uppercase; padding: 7px 10px; border-bottom: 0.5px solid var(--brown); text-align: left; }
+    .inscritos-table td { padding: 8px 10px; font-size: 12px; border-bottom: 0.5px solid rgba(58,42,26,0.4); color: var(--text); }
+    .inscritos-table tr:last-child td { border-bottom: none; }
+    .inscritos-table tbody tr:hover { background: rgba(232,200,122,0.03); }
+    .ins-pos { font-family: 'Cinzel', serif; font-size: 10px; color: var(--dim); margin-right: 6px; }
+
+    /* Partido coordinado highlight */
+    .p-score.coordinado { font-size: 11px; color: var(--gold); font-family: 'Inter', sans-serif; letter-spacing: 0; }
+    .p-score.coordinado i { font-size: 9px; margin-right: 3px; opacity: 0.7; }
+
+    /* Sortable th */
+    .tabla-pos th.sortable { cursor: pointer; user-select: none; }
+    .tabla-pos th.sortable:hover { color: var(--gold); }
+    .tabla-pos th.sort-asc::after { content: ' ▲'; font-size: 7px; }
+    .tabla-pos th.sort-desc::after { content: ' ▼'; font-size: 7px; }
+
+    @media (max-width: 768px) {
+      .grupos-grid { grid-template-columns: 1fr; }
+      .rondas-wrap { grid-template-columns: 1fr; }
+      .cruces-grid { grid-template-columns: 1fr; }
+      .section { padding: 0 16px 40px; }
+      .torneo-hero { padding: 40px 16px 30px; }
+      .nick-text { max-width: 100px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <a class="header-logo" href="/">
+    <span class="logo-icon">⚔</span>
+    <span class="logo-text">AUA</span>
+  </a>
+  <nav>
+    <a href="/eventos">Eventos</a>
+    <a href="/torneos">Salón de la Fama</a>
+    <a href="/copa_stats">📊 Stats</a>
+  </nav>
+  <div class="header-actions">
+    <% if (user) { %>
+      <a href="/dashboard" class="nav-user" title="Ir al dashboard">
+        <% if (user.image) { %><img src="<%= user.image %>" alt="Avatar" class="nav-avatar" /><% } %>
+        <span><%= user.name %></span>
+      </a>
+      <form method="POST" action="/auth/logout" style="display:inline;margin:0">
+        <button type="submit" class="nav-logout-btn" title="Cerrar sesión">✕</button>
+      </form>
+    <% } else { %>
+      <a href="/auth/discord" class="nav-discord-btn"><i class="fab fa-discord"></i>Ingresar</a>
+    <% } %>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="torneo-hero">
+  <h1 class="torneo-title"><%= torneo.nombre %></h1>
+  <div class="hero-sub" style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
+    <%= torneo.tipo %> &middot; <%= torneo.formato.replace(/_/g, ' ') %>
+    <span class="estado-badge estado-<%= torneo.estado === 'jugando' ? 'jugando' : torneo.estado === 'inscripcion' ? 'inscripcion' : 'finalizado' %>">
+      <%= torneo.estado === 'jugando' ? '● En curso' : torneo.estado === 'inscripcion' ? '● Inscripción abierta' : 'Finalizado' %>
+    </span>
+  </div>
+  <div class="hero-divider"><div class="hero-diamond"></div></div>
+  <div class="hero-pills">
+    <div class="pill"><i class="fas fa-users"></i> <%= inscriptos %> jugadores</div>
+    <% if (grupos && grupos.length > 0) { %>
+    <div class="pill"><i class="fas fa-layer-group"></i> <%= grupos.length %> grupos</div>
+    <% if (torneo.clasificados_por_grupo) { %>
+    <div class="pill"><i class="fas fa-trophy"></i> <%= torneo.clasificados_por_grupo %> clasifican por grupo</div>
+    <% } %>
+    <% } %>
+    <div class="pill"><i class="fas fa-chess-rook"></i> ELO <%= torneo.elo_min %>–<%= torneo.elo_max %></div>
+  </div>
+  <div class="quick-links">
+    <% if (grupos && grupos.length > 0) { %>
+    <a href="#grupos" class="ql-btn ql-primary"><i class="fas fa-table"></i> Ver Grupos</a>
+    <% } %>
+    <% if (Object.keys(eliminatorias).length > 0) { %>
+    <a href="#eliminatorias" class="ql-btn ql-secondary"><i class="fas fa-sitemap"></i> Eliminatorias</a>
+    <% } %>
+    <a href="/penca/<%= torneo.slug %>" class="ql-btn ql-secondary"><i class="fas fa-star"></i> Penca</a>
+    <a href="/dashboard" class="ql-btn ql-secondary"><i class="fas fa-home"></i> Dashboard</a>
+  </div>
+</div>
+
+<!-- ── INSCRITOS (solo durante inscripción) ──────────────────────── -->
+<% if (torneo.estado === 'inscripcion' && inscriptosList && inscriptosList.length > 0) { %>
+<section class="section" id="inscritos" style="padding-bottom:32px">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(90,158,114,0.1);border-color:rgba(90,158,114,0.25)"><i class="fas fa-users" style="font-size:14px;color:var(--jade)"></i></div>
+    <div>
+      <div class="section-title" style="color:var(--jade)">Inscritos</div>
+      <div class="section-sub"><%= inscriptosList.length %> jugadores registrados · ELO al momento de inscripción</div>
+    </div>
+    <div class="section-line"></div>
+  </div>
+  <div class="grupo-card">
+    <div class="tabla-scroll">
+      <table class="inscritos-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Jugador</th>
+            <th>ELO Inscripción</th>
+            <th>País</th>
+            <th>Clan</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% inscriptosList.forEach((j, i) => { %>
+          <tr>
+            <td><span class="ins-pos"><%= i + 1 %>.</span></td>
+            <td style="color:var(--text);font-weight:500"><%= j.nombre %></td>
+            <td><span class="elo-sm"><%= j.elo_inscripcion || '—' %></span></td>
+            <td style="color:var(--muted)"><%= j.pais || '—' %></td>
+            <td style="color:var(--dim)"><%= j.clan || '—' %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<!-- ── GRUPOS ──────────────────────────────────────────────────────── -->
+<% if (grupos && grupos.length > 0) { %>
+<section class="section" id="grupos">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(90,158,114,0.1);border-color:rgba(90,158,114,0.25);font-size:16px">🛡</div>
+    <div>
+      <div class="section-title" style="color:var(--jade)">Grupos & Posiciones</div>
+      <div class="section-sub">Los primeros <%= torneo.clasificados_por_grupo || 1 %> de cada grupo clasifican</div>
+    </div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchVista('tablas')">
+      <i class="fas fa-table" style="margin-right:5px;font-size:10px"></i>Tablas
+    </button>
+    <button class="tab-btn" onclick="switchVista('partidos')">
+      <i class="fas fa-chess-rook" style="margin-right:5px;font-size:10px"></i>Partidos
+    </button>
+    <div class="tab-spacer"></div>
+    <% grupos.forEach(g => { %>
+    <button class="tab-btn" onclick="scrollToGrupo(<%= g.id %>)">Grupo <%= g.nombre %></button>
+    <% }) %>
+  </div>
+
+  <!-- VISTA TABLAS -->
+  <div id="view-tablas" class="grupos-grid">
+    <% grupos.forEach(g => { %>
+    <div class="grupo-card" id="grupo-<%= g.id %>">
+      <div class="grupo-card-header">
+        <span class="grupo-nombre">Grupo <%= g.nombre %></span>
+        <span class="grupo-badge"><%= g.completados %>/<%= g.totalPartidos %> partidos</span>
+      </div>
+      <div style="padding:10px 6px">
+        <% if (g.tabla.length === 0) { %>
+        <div style="font-size:12px;color:var(--dim);padding:14px;text-align:center">Sin participantes</div>
+        <% } else { %>
+        <div class="tabla-scroll">
+        <table class="tabla-pos" data-grupo="<%= g.id %>">
+          <thead>
+            <tr>
+              <th style="text-align:left">Jugador</th>
+              <th class="sortable" data-col="1" data-type="num">ELO</th>
+              <th class="sortable" data-col="2" data-type="num">PJ</th>
+              <th class="sortable" data-col="3" data-type="num">PG</th>
+              <th class="sortable" data-col="4" data-type="num">PP</th>
+              <th class="sortable" data-col="5" data-type="num">SF</th>
+              <th class="sortable" data-col="6" data-type="num">SC</th>
+              <th class="sortable" data-col="7" data-type="num">Dif</th>
+              <th class="sortable sort-desc" data-col="8" data-type="num">PTS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% g.tabla.forEach((j, i) => {
+              const diff = j.sf - j.sc;
+            %>
+            <tr class="<%= j.clasificado ? 'clasificado' : '' %>">
+              <td>
+                <span class="pos-num"><%= i+1 %>.</span>
+                <span class="nick-text" title="<%= j.nick %>"><%= j.nick %></span>
+              </td>
+              <td><span class="elo-sm"><%= j.elo %></span></td>
+              <td class="stat-cell"><%= j.pj %></td>
+              <td class="stat-win"><%= j.pg %></td>
+              <td class="stat-loss"><%= j.pp %></td>
+              <td class="stat-cell"><%= j.sf %></td>
+              <td class="stat-cell"><%= j.sc %></td>
+              <td style="font-size:12px;color:<%= diff >= 0 ? '#a8c860' : '#c07070' %>"><%= diff > 0 ? '+' : '' %><%= diff %></td>
+              <td class="pts-cell"><%= j.pts %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        </div>
+        <% } %>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+
+  <!-- VISTA PARTIDOS -->
+  <div id="view-partidos" style="display:none">
+    <% grupos.forEach(g => { %>
+    <div style="margin-bottom:28px" id="grupop-<%= g.id %>">
+      <div class="grupo-partidos-title">Grupo <%= g.nombre %></div>
+      <% if (g.rondas.length === 0) { %>
+      <div style="font-size:12px;color:var(--dim);padding:12px 0">Sin partidos generados</div>
+      <% } else { %>
+      <div class="rondas-wrap">
+        <% g.rondas.forEach(ronda => { %>
+        <div class="ronda-block">
+          <div class="ronda-header">
+            <span class="ronda-label">Ronda <%= ronda.ronda %></span>
+          </div>
+          <% ronda.partidos.forEach(p => {
+            const fin = p.estado === 'finalizado';
+            const j1w = fin && p.score1 > p.score2;
+            const j2w = fin && p.score2 > p.score1;
+          %>
+          <div class="partido-row">
+            <div class="p-j1 <%= j1w ? 'winner' : '' %>"><%= p.j1_nombre || p.jugador1_id %></div>
+            <div class="p-score-wrap">
+              <% if (fin) { %>
+              <div class="p-score has-result">
+                <span class="s1 <%= j1w ? 'won' : '' %>"><%= p.score1 %></span>
+                <span class="sep">–</span>
+                <span class="s2 <%= j2w ? 'won' : '' %>"><%= p.score2 %></span>
+              </div>
+              <% } else if (p.coordinado) { %>
+              <%
+                const dc = new Date(p.coordinado);
+                const dd = dc.getDate().toString().padStart(2,'0');
+                const mm = (dc.getMonth()+1).toString().padStart(2,'0');
+                const hh = dc.getHours().toString().padStart(2,'0');
+                const mn = dc.getMinutes().toString().padStart(2,'0');
+              %>
+              <div class="p-score coordinado"><i class="fas fa-calendar-check"></i><%= dd %>/<%= mm %></div>
+              <div class="p-date-badge" style="color:var(--gold);opacity:0.8"><%= hh %>:<%= mn %></div>
+              <% } else { %>
+              <div class="p-score pending" style="opacity:0.45">VS</div>
+              <% } %>
+              <% if (p.draftmap || p.draftcivs || p.rec_link) { %>
+              <div class="partido-links">
+                <% if (p.draftmap) { %><a href="<%= p.draftmap %>" target="_blank" class="p-link">🗺 Mapas</a><% } %>
+                <% if (p.draftcivs) { %><a href="<%= p.draftcivs %>" target="_blank" class="p-link">🛡 Civs</a><% } %>
+                <% if (p.rec_link) { %><a href="<%= p.rec_link %>" download class="p-link">🎬 REC</a><% } %>
+              </div>
+              <% } %>
+            </div>
+            <div class="p-j2 <%= j2w ? 'winner' : '' %>"><%= p.j2_nombre || p.jugador2_id %></div>
+          </div>
+          <% }) %>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+    <% }) %>
+  </div>
+</section>
+<% } %>
+
+<!-- ── ELIMINATORIAS ────────────────────────────────────────────────── -->
+<%
+  const fasesLabels = {
+    octavos: 'Octavos de Final',
+    cuartos: 'Cuartos de Final',
+    semis: 'Semifinales',
+    final: 'Final',
+    eliminatoria: 'Eliminatoria'
+  };
+
+  // Para fase 'eliminatoria', calcular etiquetas de ronda dinámicamente
+  function labelRondaElim(ronda, maxRonda) {
+    const dist = maxRonda - ronda;
+    if (dist === 0) return 'Final';
+    if (dist === 1) return 'Semifinales';
+    if (dist === 2) return 'Cuartos de Final';
+    if (dist === 3) return 'Octavos de Final';
+    return 'Ronda ' + ronda;
+  }
+%>
+<% if (Object.keys(eliminatorias).length > 0) { %>
+<section class="section" id="eliminatorias">
+  <div class="section-header">
+    <div class="section-icon">⚔</div>
+    <div>
+      <div class="section-title">Eliminatorias</div>
+      <div class="section-sub">Fase eliminatoria del torneo</div>
+    </div>
+    <div class="section-line"></div>
+  </div>
+
+  <% Object.entries(eliminatorias).forEach(([fase, matches]) => {
+    // Para la fase genérica 'eliminatoria', agrupar por ronda con etiquetas dinámicas
+    if (fase === 'eliminatoria') {
+      const rondasMap = {};
+      matches.forEach(m => { if (!rondasMap[m.ronda]) rondasMap[m.ronda] = []; rondasMap[m.ronda].push(m); });
+      const rondasKeys = Object.keys(rondasMap).map(Number).sort((a,b) => a - b);
+      const maxRonda = rondasKeys.length > 0 ? Math.max(...rondasKeys) : 1;
+  %>
+    <% rondasKeys.forEach(ronda => { %>
+    <div class="cruce-stage">
+      <div class="cruce-stage-title"><%= labelRondaElim(ronda, maxRonda) %></div>
+      <div class="cruces-grid">
+        <% rondasMap[ronda].forEach(m => {
+          const fin = m.estado === 'finalizado';
+          const j1w = fin && m.score1 > m.score2;
+          const j2w = fin && m.score2 > m.score1;
+        %>
+        <div class="cruce-card">
+          <div class="cruce-num"><%= labelRondaElim(ronda, maxRonda) %> &middot; Partido <%= m.id %></div>
+          <div class="cruce-j">
+            <span class="cruce-nick <%= !m.j1_nombre ? 'tbd' : (j1w ? 'winner' : '') %>">
+              <%= m.j1_nombre || 'Por definir' %>
+            </span>
+            <% if (fin) { %><span class="cruce-score-num" style="color:<%= j1w ? '#a8c860' : 'var(--text)' %>"><%= m.score1 %></span><% } %>
+          </div>
+          <div class="cruce-vs"><% if (!fin) { %>VS<% } else { %>–<% } %></div>
+          <div class="cruce-j">
+            <span class="cruce-nick <%= !m.j2_nombre ? 'tbd' : (j2w ? 'winner' : '') %>">
+              <%= m.j2_nombre || 'Por definir' %>
+            </span>
+            <% if (fin) { %><span class="cruce-score-num" style="color:<%= j2w ? '#a8c860' : 'var(--text)' %>"><%= m.score2 %></span><% } %>
+          </div>
+          <% if (m.coordinado && !fin) { %>
+          <% const de = new Date(m.coordinado);
+             const dde = de.getDate().toString().padStart(2,'0');
+             const mme = (de.getMonth()+1).toString().padStart(2,'0');
+             const hhe = de.getHours().toString().padStart(2,'0');
+             const mne = de.getMinutes().toString().padStart(2,'0'); %>
+          <div style="font-size:10px;color:var(--dim);text-align:center;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--brown)">
+            <%= dde %>/<%= mme %> &middot; <%= hhe %>:<%= mne %>
+          </div>
+          <% } %>
+          <% if (m.draftmap || m.draftcivs || m.rec_link) { %>
+          <div class="partido-links" style="justify-content:center;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--brown)">
+            <% if (m.draftmap) { %><a href="<%= m.draftmap %>" target="_blank" class="p-link">🗺 Mapas</a><% } %>
+            <% if (m.draftcivs) { %><a href="<%= m.draftcivs %>" target="_blank" class="p-link">🛡 Civs</a><% } %>
+            <% if (m.rec_link) { %><a href="<%= m.rec_link %>" download class="p-link">🎬 REC</a><% } %>
+          </div>
+          <% } %>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+    <% }) %>
+  <% } else { %>
+  <div class="cruce-stage">
+    <div class="cruce-stage-title"><%= fasesLabels[fase] || fase %></div>
+    <div class="cruces-grid">
+      <% matches.forEach(m => {
+        const fin = m.estado === 'finalizado';
+        const j1w = fin && m.score1 > m.score2;
+        const j2w = fin && m.score2 > m.score1;
+      %>
+      <div class="cruce-card">
+        <div class="cruce-num">Partido <%= m.id %> &middot; <%= fasesLabels[fase] || fase %></div>
+        <div class="cruce-j">
+          <span class="cruce-nick <%= !m.j1_nombre ? 'tbd' : (j1w ? 'winner' : '') %>">
+            <%= m.j1_nombre || 'Por definir' %>
+          </span>
+          <% if (fin) { %>
+          <span class="cruce-score-num" style="color:<%= j1w ? '#a8c860' : 'var(--text)' %>"><%= m.score1 %></span>
+          <% } %>
+        </div>
+        <div class="cruce-vs"><% if (!fin) { %>VS<% } else { %>–<% } %></div>
+        <div class="cruce-j">
+          <span class="cruce-nick <%= !m.j2_nombre ? 'tbd' : (j2w ? 'winner' : '') %>">
+            <%= m.j2_nombre || 'Por definir' %>
+          </span>
+          <% if (fin) { %>
+          <span class="cruce-score-num" style="color:<%= j2w ? '#a8c860' : 'var(--text)' %>"><%= m.score2 %></span>
+          <% } %>
+        </div>
+        <% if (m.coordinado && !fin) { %>
+        <%
+          const de = new Date(m.coordinado);
+          const dde = de.getDate().toString().padStart(2,'0');
+          const mme = (de.getMonth()+1).toString().padStart(2,'0');
+          const hhe = de.getHours().toString().padStart(2,'0');
+          const mne = de.getMinutes().toString().padStart(2,'0');
+        %>
+        <div style="font-size:10px;color:var(--dim);text-align:center;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--brown)">
+          <%= dde %>/<%= mme %> &middot; <%= hhe %>:<%= mne %>
+        </div>
+        <% } %>
+        <% if (m.draftmap || m.draftcivs || m.rec_link) { %>
+        <div class="partido-links" style="justify-content:center;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--brown)">
+          <% if (m.draftmap) { %><a href="<%= m.draftmap %>" target="_blank" class="p-link">🗺 Mapas</a><% } %>
+          <% if (m.draftcivs) { %><a href="<%= m.draftcivs %>" target="_blank" class="p-link">🛡 Civs</a><% } %>
+          <% if (m.rec_link) { %><a href="<%= m.rec_link %>" download class="p-link">🎬 REC</a><% } %>
+        </div>
+        <% } %>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+  <% }) %>
+</section>
+<% } %>
+
+<% if ((!grupos || grupos.length === 0) && Object.keys(eliminatorias).length === 0) { %>
+<div class="section" style="padding-top:20px">
+  <div class="empty-msg">No hay datos de grupos o eliminatorias cargados aún para este torneo.</div>
+</div>
+<% } %>
+
+<footer style="text-align:center;padding:36px 24px;border-top:0.5px solid rgba(58,42,26,0.5);background:var(--bg1)">
+  <div class="footer-logo">AUA</div>
+  <div class="footer-text">Asociación Uruguaya de Age of Empires II</div>
+</footer>
+
+<script>
+let vistaActual = 'tablas';
+
+function switchVista(v) {
+  vistaActual = v;
+  document.getElementById('view-tablas').style.display = v === 'tablas' ? 'grid' : 'none';
+  document.getElementById('view-partidos').style.display = v === 'partidos' ? 'block' : 'none';
+  const btns = document.querySelectorAll('.tabs .tab-btn');
+  if (btns[0]) btns[0].classList.toggle('active', v === 'tablas');
+  if (btns[1]) btns[1].classList.toggle('active', v === 'partidos');
+}
+
+function scrollToGrupo(id) {
+  const prefix = vistaActual === 'tablas' ? 'grupo-' : 'grupop-';
+  const el = document.getElementById(prefix + id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Columnas ordenables en tablas de posiciones
+document.querySelectorAll('.tabla-pos').forEach(table => {
+  const headers = table.querySelectorAll('th.sortable');
+  headers.forEach(th => {
+    th.addEventListener('click', () => {
+      const col = parseInt(th.dataset.col);
+      const isDesc = th.classList.contains('sort-desc');
+      // Limpiar estado de todos los th de esta tabla
+      table.querySelectorAll('th').forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+      th.classList.add(isDesc ? 'sort-asc' : 'sort-desc');
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort((a, b) => {
+        const va = parseFloat(a.cells[col]?.textContent?.trim()) || 0;
+        const vb = parseFloat(b.cells[col]?.textContent?.trim()) || 0;
+        return isDesc ? va - vb : vb - va;
+      });
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+});
+</script>
+</body>
+</html>
+

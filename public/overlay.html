@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Overlay — Copa Uruguaya 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;background:transparent;overflow:hidden;font-family:'Inter',sans-serif}
+
+@keyframes fadeInUp   {from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInDown {from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse      {0%,100%{opacity:.7}50%{opacity:1}}
+@keyframes barGrow    {from{width:0}to{width:var(--w,0%)}}
+@keyframes slideUp    {from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:translateY(0)}}
+
+/* MODO PRESENTACIÓN */
+#pre{position:absolute;bottom:0;left:0;right:0;height:320px;display:none;flex-direction:column}
+.pre-fade{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 0%,rgba(8,5,2,.88) 28%,rgba(8,5,2,.98) 60%,rgba(8,5,2,1) 100%)}
+.pre-header{position:relative;text-align:center;padding:16px 0 6px;animation:fadeInDown .55s ease both}
+.pre-torneo{font-family:'Cinzel',serif;font-size:20px;color:#e8c87a;letter-spacing:5px;text-transform:uppercase}
+.pre-enc{font-size:12px;color:#554433;letter-spacing:2px;margin-top:4px}
+.pre-sep{position:relative;height:1px;background:linear-gradient(to right,transparent,rgba(232,200,122,.5),#e8c87a,rgba(232,200,122,.5),transparent);margin:6px 100px;animation:fadeInDown .6s .1s ease both}
+.pre-players{position:relative;display:flex;justify-content:space-between;align-items:stretch;padding:0 80px 22px;gap:60px;animation:fadeInUp .6s .18s ease both}
+.pre-j{flex:1;max-width:680px}
+.pre-j.right{text-align:right}
+.pre-nick{font-family:'Cinzel',serif;font-size:28px;color:#f0e0b0;letter-spacing:.5px;line-height:1;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wr-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pre-j.right .wr-row{flex-direction:row-reverse}
+.wr-num{font-family:'Cinzel',serif;font-size:24px;font-weight:700;min-width:56px;line-height:1}
+.wr-info{display:flex;flex-direction:column;gap:3px}
+.wr-label{font-size:10px;color:#554433;letter-spacing:1px}
+.wr-bar-bg{height:4px;width:190px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.wr-bar{height:4px;border-radius:2px;animation:barGrow .9s .6s ease both;width:0}
+.civs-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:7px}
+.pre-j.right .civs-row{justify-content:flex-end}
+.civ-chip{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.045);border:0.5px solid rgba(232,200,122,.18);border-radius:5px;padding:4px 9px}
+.civ-chip img{width:20px;height:20px;border-radius:3px;object-fit:cover}
+.civ-chip-name{font-size:12px;color:#c8b880}
+.civ-chip-wr{font-size:10px;color:#806040}
+.maps-row{display:flex;gap:5px;flex-wrap:wrap}
+.pre-j.right .maps-row{justify-content:flex-end}
+.map-tag{font-size:11px;color:#806040;background:rgba(255,255,255,.025);border:0.5px solid #2a1a0a;border-radius:4px;padding:3px 8px}
+.map-tag b{color:#a09070}
+.pre-mid{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:110px}
+.pre-mid-vs{font-family:'Cinzel',serif;font-size:42px;color:#e8c87a;letter-spacing:6px;line-height:1;animation:pulse 2.8s ease-in-out infinite}
+.pre-mid-line{width:1px;height:55px;background:linear-gradient(to bottom,transparent,rgba(232,200,122,.35),transparent);margin:8px 0}
+
+/* MODO MINI */
+#mini{position:absolute;bottom:22px;left:22px;display:none;flex-direction:column;animation:slideUp .45s ease both}
+.mini-top{background:rgba(8,5,2,.92);border:0.5px solid rgba(232,200,122,.22);border-bottom:none;border-radius:8px 8px 0 0;padding:5px 14px;font-family:'Cinzel',serif;font-size:10px;color:#554433;letter-spacing:2px;text-align:center}
+.mini-body{display:flex;background:rgba(8,5,2,.94);border:0.5px solid rgba(232,200,122,.22);border-radius:0 0 8px 8px;overflow:hidden}
+.mini-p{display:flex;align-items:center;gap:8px;padding:10px 14px}
+.mini-sep{width:1px;background:rgba(232,200,122,.08);margin:6px 0}
+.mini-img{width:28px;height:28px;border-radius:4px;object-fit:cover;background:#1a1208}
+.mini-name{font-size:13px;color:#e0d8c8;font-weight:500;white-space:nowrap}
+.mini-civ{font-size:11px;color:#665544}
+.mini-wr{font-family:'Cinzel',serif;font-size:14px;font-weight:700;margin-left:4px}
+
+#status-badge{position:absolute;top:16px;right:16px;background:rgba(8,5,2,.8);border:0.5px solid #2a1a0a;border-radius:6px;padding:6px 12px;font-size:11px;color:#3a2a1a;letter-spacing:1px;display:none}
+
+/* ── Firma JabsUY ── */
+#firma{
+  position:absolute;
+  bottom:14px;
+  right:18px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  opacity:0.18;
+  transition:opacity 0.3s;
+  pointer-events:none;
+}
+#firma:hover{opacity:0.38}
+#firma img{width:28px;height:28px;border-radius:50%;object-fit:cover;filter:grayscale(30%)}
+#firma span{
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  color:#e8c87a;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+#firma .by{
+  font-family:'Inter',sans-serif;
+  font-size:9px;
+  color:#806040;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  display:block;
+  margin-bottom:1px;
+}
+</style>
+</head>
+<body>
+
+<div id="pre">
+  <div class="pre-fade"></div>
+  <div class="pre-header">
+    <div class="pre-torneo" id="pre-torneo">⚔ Copa Uruguaya 2026 ⚔</div>
+    <div class="pre-enc" id="pre-enc">Grupo — · Ronda —</div>
+  </div>
+  <div class="pre-sep"></div>
+  <div class="pre-players">
+    <div class="pre-j left"  id="pre-j1"></div>
+    <div class="pre-mid">
+      <div class="pre-mid-line"></div>
+      <div class="pre-mid-vs">VS</div>
+      <div class="pre-mid-line"></div>
+    </div>
+    <div class="pre-j right" id="pre-j2"></div>
+  </div>
+</div>
+
+<div id="mini">
+  <div class="mini-top" id="mini-title">COPA URUGUAYA 2026</div>
+  <div class="mini-body">
+    <div class="mini-p" id="mini-j1"></div>
+    <div class="mini-sep"></div>
+    <div class="mini-p" id="mini-j2"></div>
+  </div>
+</div>
+
+<div id="status-badge">OVERLAY INACTIVO</div>
+
+<!-- Firma -->
+<div id="firma">
+  <div>
+    <span class="by">Diseñado por</span>
+    <span>JabsUY</span>
+  </div>
+  <img src="https://aua.netlify.app/img/jabs2.png" alt="JabsUY" onerror="this.style.display='none'"/>
+</div>
+
+<script>
+// ── GitHub polling — mismo patrón que draftoverlay.html ─────────────────────
+const STATE_URL = window.location.origin + '/api/overlay/overlay';
+const civImg    = c => `https://backend.cdn.aoe2companion.com/public/aoe2/de/civilizations/${(c||'').toLowerCase().replace(/ /g,'_')}.png`;
+const wrColor   = w => w >= 60 ? '#a8c860' : w >= 40 ? '#e8c87a' : '#c87060';
+const cleanNick = n => (n||'').replace(/[|\[\]]/g,'').trim();
+const cleanMapName = m => (m||'').replace(/^CopaU_\d+_/i, '').replace(/\s*\(Custom\)\s*$/i, '').trim();
+
+
+function getTorneo(s) {
+  return s?.torneo
+    || localStorage.getItem('torneoNombre')
+    || new URLSearchParams(location.search).get('torneo')
+    || 'Copa Uruguaya 2026';
+}
+
+function apply(s) {
+  document.getElementById('pre').style.display          = 'none';
+  document.getElementById('mini').style.display         = 'none';
+  document.getElementById('status-badge').style.display = 'none';
+
+  if (!s?.visible) {
+    document.getElementById('status-badge').style.display = 'block';
+    return;
+  }
+
+  const torneo = getTorneo(s);
+
+  if (s.modo === 'pre') {
+    const el = document.getElementById('pre');
+    el.style.display = 'flex';
+    document.getElementById('pre-torneo').textContent  = `⚔ ${torneo} ⚔`;
+    document.getElementById('pre-enc').textContent     = `Grupo ${s.grupo} · Ronda ${s.ronda} · ${s.formato}`;
+    document.getElementById('pre-j1').innerHTML        = buildPreJ(s.j1);
+    document.getElementById('pre-j2').innerHTML        = buildPreJ(s.j2);
+  } else if (s.modo === 'mini') {
+    document.getElementById('mini').style.display = 'flex';
+    document.getElementById('mini-title').textContent = `${torneo} · G${s.grupo} · R${s.ronda}`;
+    document.getElementById('mini-j1').innerHTML = buildMiniJ(s.j1);
+    document.getElementById('mini-j2').innerHTML = buildMiniJ(s.j2);
+  }
+}
+
+function buildPreJ(j) {
+  if (!j) return `<div style="font-family:Cinzel,serif;font-size:20px;color:#2a1a0a">—</div>`;
+  const nick  = cleanNick(j.nick);
+  const wr    = j.global?.winrate ?? 0;
+  const pg    = j.global?.pg ?? 0;
+  const pp    = j.global?.pp ?? 0;
+  const col   = wrColor(wr);
+  const top3  = Object.entries(j.civs ?? {}).sort((a,b)=>b[1].pj-a[1].pj).slice(0,3);
+  const topM  = Object.entries(j.mapas ?? {}).sort((a,b)=>b[1].winrate-a[1].winrate).filter(([,d])=>d.pj>=1).slice(0,2);
+
+  return `
+    <div class="pre-nick">${nick}</div>
+    <div class="wr-row">
+      <div class="wr-num" style="color:${col}">${wr}%</div>
+      <div class="wr-info">
+        <div class="wr-label">WINRATE · ${pg}V ${pp}D</div>
+        <div class="wr-bar-bg"><div class="wr-bar" style="--w:${Math.min(wr,100)}%;background:${col}"></div></div>
+      </div>
+    </div>
+    <div class="civs-row">${top3.map(([civ,d])=>`
+      <div class="civ-chip">
+        <img src="${civImg(civ)}" onerror="this.style.display='none'" alt="${civ}"/>
+        <span class="civ-chip-name">${civ}</span>
+        <span class="civ-chip-wr">${d.winrate}%</span>
+      </div>`).join('') || '<span style="font-size:12px;color:#2a1a0a">Sin historial</span>'}
+    </div>
+    ${topM.length ? `<div class="maps-row">${topM.map(([m,d])=>`<div class="map-tag">🗺 ${cleanMapName(m)} <b>${d.winrate}%</b></div>`).join('')}</div>` : ''}
+  `;
+}
+
+function buildMiniJ(j) {
+  if (!j) return `<span style="font-size:12px;color:#2a1a0a">—</span>`;
+  const nick   = cleanNick(j.nick).split(/[\s/]+/).pop();
+  const wr     = j.global?.winrate ?? 0;
+  const topCiv = Object.entries(j.civs ?? {}).sort((a,b)=>b[1].pj-a[1].pj)[0];
+  const civ    = topCiv?.[0] ?? '';
+  return `
+    <img class="mini-img" src="${civImg(civ)}" onerror="this.style.display='none'" alt="${civ}"/>
+    <div><div class="mini-name">${nick}</div><div class="mini-civ">${civ||'—'}</div></div>
+    <div class="mini-wr" style="color:${wrColor(wr)}">${wr}%</div>
+  `;
+}
+
+// ── WebSocket (instantáneo) + polling GitHub (fallback) ─────────────────────
+const WS_SERVER = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host;
+let lastTs = null;
+let wsConnected = false;
+
+function conectarWS() {
+  try {
+    const ws = new WebSocket(WS_SERVER + '/ws?canal=overlay');
+
+    ws.onopen = () => {
+      wsConnected = true;
+      console.log('[WS] Conectado al servidor');
+    };
+
+    ws.onmessage = e => {
+      try {
+        const s = JSON.parse(e.data);
+        lastTs = s.ts;
+        apply(s);
+      } catch(err) {}
+    };
+
+    ws.onclose = () => {
+      wsConnected = false;
+      console.log('[WS] Desconectado — reintentando en 5s');
+      setTimeout(conectarWS, 5000);  // reconexión automática
+    };
+
+    ws.onerror = () => ws.close();
+  } catch(e) {}
+}
+
+// Polling GitHub como fallback (cuando WS no está disponible)
+async function pollGitHub() {
+  if (wsConnected) return;  // si WS funciona, no necesitamos polling
+  try {
+    const r = await fetch(STATE_URL + '?t=' + Date.now());
+    if (!r.ok) return;
+    const s = await r.json();
+    if (s.ts !== lastTs) { lastTs = s.ts; apply(s); }
+  } catch(e) {}
+}
+
+// Arrancar ambos — WS primero, polling como red de seguridad
+conectarWS();
+pollGitHub();
+setInterval(pollGitHub, 3000);
+</script>
+</body>
+</html>

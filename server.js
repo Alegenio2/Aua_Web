@@ -71,6 +71,16 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.set('trust proxy', 1);
 
+// Set UTF-8 charset for all HTML responses
+app.use((req, res, next) => {
+  const originalRender = res.render;
+  res.render = function(view, options, callback) {
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    return originalRender.call(this, view, options, callback);
+  };
+  next();
+});
+
 app.use(compression({ level: 6 }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: '2mb' }));

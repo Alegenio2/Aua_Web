@@ -49,8 +49,9 @@ async function minifyJS(code) {
   const { minify } = await import('terser');
   try {
     const result = await minify(code, {
-      compress: true,
+      compress: { unsafe: false },
       mangle: false,
+      output: { beautify: false }
     });
     return result.code || code;
   } catch (e) {

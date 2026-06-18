@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AUA - Asociación Uruguaya de Age of Empires II</title>
+    <title>AUA - AsociaciÃ³n Uruguaya de Age of Empires II</title>
     <meta name="description" content="Comunidad oficial de AOE II en Uruguay. Torneos y competencia online.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,15 +21,15 @@
 
 <header>
     <a class="header-logo" href="/">
-        <span class="logo-icon">⚔</span>
+        <span class="logo-icon">âš”</span>
         <span class="logo-text">AUA</span>
     </a>
 
     <nav id="nav-menu" class="desktop-nav">
         <a class="active" href="/">Inicio</a>
         <a href="/eventos">Eventos</a>
-        <a href="/torneos">Salón de la Fama</a>
-        <a class="nav-stats" href="/copa_stats">📊 Stats</a>
+        <a href="/torneos">SalÃ³n de la Fama</a>
+        <a class="nav-stats" href="/copa_stats">ðŸ“Š Stats</a>
     </nav>
 
     <div class="header-actions">
@@ -41,7 +41,7 @@
                 <span><%= user.name %></span>
             </a>
             <form method="POST" action="/auth/logout" style="display:inline;margin:0">
-                <button type="submit" class="nav-logout-btn" title="Cerrar sesión">✕</button>
+                <button type="submit" class="nav-logout-btn" title="Cerrar sesiÃ³n">âœ•</button>
             </form>
         <% } else { %>
             <a href="/auth/discord" class="nav-discord-btn" title="Ingresar con Discord">
@@ -99,9 +99,9 @@ document.querySelectorAll('.bottom-nav-item').forEach(item => {
 </script>
 
 <div class="hero fade-up">
-    <div class="hero-label">Asociación Uruguaya de Age of Empires II</div>
+    <div class="hero-label">AsociaciÃ³n Uruguaya de Age of Empires II</div>
     <h1 class="hero-title">Comunidad <span>Uruguaya</span> de AOE II</h1>
-    <div class="hero-sub">Torneos · Competencia · Comunidad</div>
+    <div class="hero-sub">Torneos Â· Competencia Â· Comunidad</div>
     <div class="hero-divider"><div class="hero-diamond"></div></div>
     <div class="hero-pills">
         <div class="pill"><i class="fas fa-trophy"></i> Torneos semanales</div>
@@ -134,7 +134,7 @@ document.querySelectorAll('.bottom-nav-item').forEach(item => {
 
         <aside class="sidebar-info">
             <div class="info-box">
-                <div class="box-header"><i>🎯</i> Próximos eventos</div>
+                <div class="box-header"><i>ðŸŽ¯</i> PrÃ³ximos eventos</div>
                 <div class="box-content">
                     <% if (activeTournaments && activeTournaments.length > 0) { %>
                         <div style="display:flex;flex-direction:column;gap:14px;">
@@ -144,7 +144,7 @@ document.querySelectorAll('.bottom-nav-item').forEach(item => {
                                 <div class="event-row <%= enCurso ? 'jugando' : '' %>">
                                     <div class="row-title"><%= t.nombre %></div>
                                     <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">
-                                        <%= t.tipo %> · <%= t.formato.replace(/_/g, ' ') %> · <strong><%= enCurso ? 'En curso' : 'Inscripción' %></strong>
+                                        <%= t.tipo %> Â· <%= t.formato.replace(/_/g, ' ') %> Â· <strong><%= enCurso ? 'En curso' : 'InscripciÃ³n' %></strong>
                                     </div>
                                     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
                                         <% if (!enCurso) { %>
@@ -167,7 +167,7 @@ document.querySelectorAll('.bottom-nav-item').forEach(item => {
                 </div>
             </div>
             <div class="info-box torneo-info">
-                <div class="box-header"><i>🕒</i> Partidas en vivo</div>
+                <div class="box-header"><i>ðŸ•’</i> Partidas en vivo</div>
                 <div class="box-content" id="proximas-partidas">
                     <% if (upcomingMatches && upcomingMatches.length > 0) { %>
                         <div style="display:flex;flex-direction:column;gap:14px;">
@@ -193,7 +193,7 @@ document.querySelectorAll('.bottom-nav-item').forEach(item => {
 
     <section id="organizacion">
         <div class="section-header">
-            <div class="section-icon">🏆</div>
+            <div class="section-icon">ðŸ†</div>
             <div>
                 <div class="section-title">Organizan</div>
                 <div class="section-sub">Equipos detras de los torneos</div>
@@ -202,23 +202,23 @@ document.querySelectorAll('.bottom-nav-item').forEach(item => {
         </div>
         <div class="organizadores-grid">
             <div class="organizador">
-                <picture><source srcset="/img/Fumage.webp" type="image/webp"><img src="/img/Fumage.png" alt="Fumage" /></picture>
+                <picture><source srcset="/img/Fumage.webp?v=1" type="image/webp"><img src="/img/Fumage.png?v=1" alt="Fumage" /></picture>
                 <p>Clan Fumage</p>
             </div>
             <div class="organizador">
-                <picture><source srcset="/img/jabs2.webp" type="image/webp"><img src="/img/jabs2.png" alt="JabsUY" /></picture>
+                <picture><source srcset="/img/jabs2.webp?v=1" type="image/webp"><img src="/img/jabs2.png?v=1" alt="JabsUY" /></picture>
                 <p>JabsUY</p>
             </div>
             <div class="organizador">
-                <picture><source srcset="/img/aua.webp" type="image/webp"><img src="/img/aua.png" alt="AUA" /></picture>
-                <p>Asociación Uruguaya de AOE II</p>
+                <picture><source srcset="/img/aua.webp?v=1" type="image/webp"><img src="/img/aua.png?v=1" alt="AUA" /></picture>
+                <p>AsociaciÃ³n Uruguaya de AOE II</p>
             </div>
         </div>
     </section>
 
     <section id="sponsors">
         <div class="section-header">
-            <div class="section-icon">🤝</div>
+            <div class="section-icon">ðŸ¤</div>
             <div>
                 <div class="section-title">Sponsors</div>
                 <div class="section-sub">Empresas que hacen posible los torneos</div>
@@ -227,32 +227,32 @@ document.querySelectorAll('.bottom-nav-item').forEach(item => {
         </div>
         <div class="contenedor-sponsors">
             <div class="sponsor">
-                <picture><source srcset="/img/sponsors/abstract.webp" type="image/webp"><img src="/img/sponsors/abstract.png" alt="Abstract Gaming" /></picture>
+                <picture><source srcset="/img/sponsors/abstract.webp?v=1" type="image/webp"><img src="/img/sponsors/abstract.png?v=1" alt="Abstract Gaming" /></picture>
                 <p>Abstract Gaming</p>
                 <a href="https://www.instagram.com/abstractlatam/" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
             </div>
             <div class="sponsor">
-                <picture><source srcset="/img/sponsors/banifox.webp" type="image/webp"><img src="/img/sponsors/banifox.png" alt="Banifox Uruguay" /></picture>
+                <picture><source srcset="/img/sponsors/banifox.webp?v=1" type="image/webp"><img src="/img/sponsors/banifox.png?v=1" alt="Banifox Uruguay" /></picture>
                 <p>Banifox Uruguay</p>
                 <a href="https://www.instagram.com/banifox.uruguay/" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
             </div>
             <div class="sponsor">
-                <picture><source srcset="/img/sponsors/jbl.webp" type="image/webp"><img src="/img/sponsors/jbl.png" alt="JBL Uruguay" /></picture>
+                <picture><source srcset="/img/sponsors/jbl.webp?v=1" type="image/webp"><img src="/img/sponsors/jbl.png?v=1" alt="JBL Uruguay" /></picture>
                 <p>JBL Uruguay</p>
                 <a href="https://www.instagram.com/jbluruguayoficial/" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
             </div>
             <div class="sponsor">
-                <picture><source srcset="/img/sponsors/sharkoon.webp" type="image/webp"><img src="/img/sponsors/sharkoon.png" alt="Sharkoon LATAM" /></picture>
+                <picture><source srcset="/img/sponsors/sharkoon.webp?v=1" type="image/webp"><img src="/img/sponsors/sharkoon.png?v=1" alt="Sharkoon LATAM" /></picture>
                 <p>Sharkoon LATAM</p>
                 <a href="https://www.instagram.com/sharkoonlatam/" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
             </div>
             <div class="sponsor">
-                <picture><source srcset="/img/sponsors/netac.webp" type="image/webp"><img src="/img/sponsors/netac.jpg" alt="Netac" /></picture>
+                <picture><source srcset="/img/sponsors/netac.webp?v=1" type="image/webp"><img src="/img/sponsors/netac.jpg?v=1" alt="Netac" /></picture>
                 <p>Netac</p>
                 <a href="https://www.instagram.com/netac_official/" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
             </div>
             <div class="sponsor">
-                <picture><source srcset="/img/sponsors/estampame_esta.webp" type="image/webp"><img src="/img/sponsors/estampame_esta.png" alt="EstampameEsta" /></picture>
+                <picture><source srcset="/img/sponsors/estampame_esta.webp?v=1" type="image/webp"><img src="/img/sponsors/estampame_esta.png?v=1" alt="EstampameEsta" /></picture>
                 <p>Estampame Esta</p>
                 <a href="https://www.instagram.com/estampameestauy" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
             </div>
@@ -262,7 +262,7 @@ document.querySelectorAll('.bottom-nav-item').forEach(item => {
 
 <footer>
     <div class="footer-logo">AUA</div>
-    <div class="footer-text">Asociación Uruguaya de Age of Empires II</div>
+    <div class="footer-text">AsociaciÃ³n Uruguaya de Age of Empires II</div>
     <div class="footer-links">
         <a href="https://www.twitch.tv/jabsuy" target="_blank" title="Twitch"><i class="fab fa-twitch"></i></a>
         <a href="https://www.youtube.com/@jabsuy" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
@@ -275,3 +275,4 @@ document.querySelectorAll('.bottom-nav-item').forEach(item => {
 <script defer src="js/bundles/index.bundle.js"></script>
 </body>
 </html>
+

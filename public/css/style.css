@@ -613,7 +613,7 @@ nav a.active {
 }
 
 .sponsor:hover {
-    border-color: var(--gold2);
+    border-color: var(--jade);
     transform: translateY(-2px);
 }
 

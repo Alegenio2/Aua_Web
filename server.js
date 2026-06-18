@@ -86,9 +86,9 @@ app.use((req, res, next) => {
   else if (req.path === '/' || req.path.match(/\.(html|ejs)$/)) {
     res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
   }
-  // CSS and JS (moderate cache)
+  // CSS and JS (short cache for development)
   else if (req.path.match(/\.(css|js)$/)) {
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
   }
   next();
 });

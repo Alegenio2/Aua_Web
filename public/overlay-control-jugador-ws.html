@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control Overlay Jugador (WebSocket)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f0a05 0%, #1a0f08 100%);
+      color: #e8d4b8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(30, 18, 10, 0.95);
+      border: 2px solid #8b6f47;
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #b8860b;
+    }
+
+    .subtitle {
+      color: #999;
+      margin-bottom: 32px;
+      font-size: 13px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #8b6f47;
+      background: rgba(139, 111, 71, 0.1);
+      color: #e8d4b8;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    input::placeholder {
+      color: #666;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #b8860b;
+      background: rgba(139, 111, 71, 0.2);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-primary {
+      background: #b8860b;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #d4a60a;
+      transform: translateY(-2px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      background: #666;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .status {
+      background: rgba(139, 111, 71, 0.15);
+      border: 1px solid rgba(139, 111, 71, 0.4);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 12px;
+      margin-bottom: 20px;
+      color: #999;
+    }
+
+    .status.success {
+      background: rgba(106, 128, 64, 0.15);
+      border-color: rgba(106, 128, 64, 0.4);
+      color: #a8c860;
+    }
+
+    .status.error {
+      background: rgba(200, 112, 96, 0.15);
+      border-color: rgba(200, 112, 96, 0.4);
+      color: #e89070;
+    }
+
+    .info-box {
+      background: rgba(139, 111, 71, 0.15);
+      border: 1px solid rgba(139, 111, 71, 0.4);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #999;
+    }
+
+    .info-box strong {
+      color: #b8860b;
+    }
+
+    .jugadores-rapidos {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(139, 111, 71, 0.3);
+    }
+
+    .jugadores-rapidos h3 {
+      font-size: 11px;
+      color: #b8860b;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .quick-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .quick-btn {
+      padding: 8px;
+      background: rgba(139, 111, 71, 0.1);
+      border: 1px solid rgba(139, 111, 71, 0.3);
+      border-radius: 6px;
+      color: #e8d4b8;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quick-btn:hover {
+      background: rgba(139, 111, 71, 0.2);
+      border-color: #b8860b;
+    }
+
+    .token-info {
+      background: rgba(200, 112, 96, 0.1);
+      border: 1px solid rgba(200, 112, 96, 0.3);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 16px;
+      font-size: 11px;
+      color: #e89070;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>⚔️ Control Jugador AoE2</h1>
+  <p class="subtitle">Actualiza el overlay en tiempo real</p>
+
+  <div id="status" class="status" style="display: none;"></div>
+
+  <div class="form-group">
+    <label>Ingresa Profile ID o nombre de jugador</label>
+    <input type="text" id="searchInput" placeholder="Ej: 2304739 o TINCHO" />
+  </div>
+
+  <div class="button-group">
+    <button class="btn-primary" id="submitBtn" onclick="enviar()">Mostrar Jugador</button>
+  </div>
+
+  <div class="info-box">
+    <strong>💡 Cómo usar:</strong><br>
+    1. Ingresa un profileId o nombre<br>
+    2. Presiona "Mostrar Jugador"<br>
+    3. El overlay en OBS se actualiza automáticamente
+  </div>
+
+  <div class="jugadores-rapidos">
+    <h3>⚡ Acceso rápido</h3>
+    <div class="quick-buttons">
+      <button class="quick-btn" onclick="buscarRapido('2304739')">TINCHO</button>
+      <button class="quick-btn" onclick="buscarRapido('155908')">Hera</button>
+      <button class="quick-btn" onclick="buscarRapido('197746')">Mr Yo</button>
+      <button class="quick-btn" onclick="buscarRapido('196540')">DauT</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const searchInput = document.getElementById('searchInput');
+
+searchInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') enviar();
+});
+
+function mostrarStatus(msg, tipo) {
+  const status = document.getElementById('status');
+  status.textContent = msg;
+  status.className = `status ${tipo || ''}`;
+  status.style.display = 'block';
+}
+
+function buscarRapido(id) {
+  searchInput.value = id;
+  enviar();
+}
+
+async function enviar() {
+  const input = searchInput.value.trim();
+  if (!input) {
+    mostrarStatus('⚠️ Ingresa un profileId', 'error');
+    return;
+  }
+
+  // Si es solo números, usar como profileId
+  const profileId = /^\d+$/.test(input) ? input : null;
+
+  if (!profileId) {
+    mostrarStatus('⚠️ El profileId debe ser solo números', 'error');
+    return;
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Cargando...';
+
+  try {
+    // Obtener token primero (si es necesario)
+    let token = localStorage.getItem('overlayToken');
+    if (!token) {
+      // Para simplificar, si no hay token, intentar sin auth
+      // En producción, aquí iría la lógica de obtener token
+      token = null;
+    }
+
+    const response = await fetch('/overlay/jugador', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ profileId })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    mostrarStatus('✓ Jugador actualizado en OBS', 'success');
+    searchInput.value = '';
+  } catch (e) {
+    mostrarStatus(`✗ Error: ${e.message}`, 'error');
+    console.error(e);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Mostrar Jugador';
+  }
+}
+</script>
+
+</body>
+</html>

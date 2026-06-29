@@ -3,6 +3,7 @@ const path = require('path');
 const WebSocket = require('ws');
 const jwt  = require('jsonwebtoken');
 const Database = require('better-sqlite3');
+const { obtenerDatosJugadorCompl } = require('./lib/aoe2');
 
 const PASS_DRAFT   = process.env.ADMIN_PASSWORD_DRAFT   || 'draft-cambiar';
 const PASS_CONTROL = process.env.ADMIN_PASSWORD_CONTROL || 'control-cambiar';
@@ -354,6 +355,24 @@ module.exports = function setupStream(app, server) {
 
   app.get('/api/overlay/:canal', (req, res) => {
     res.json(lastState[req.params.canal] || { visible: false, ts: 0 });
+  });
+
+  // ── API: datos de jugador aoe2companion para overlay de jugador ────────────────
+  app.get('/api/jugador/:profileId', async (req, res) => {
+    const { profileId } = req.params;
+    if (!profileId || !/^\d+$/.test(profileId)) {
+      return res.status(400).json({ error: 'profileId inválido' });
+    }
+    try {
+      const datos = await obtenerDatosJugadorCompl(profileId);
+      if (datos?.error) {
+        return res.status(404).json({ error: datos.error });
+      }
+      res.json(datos);
+    } catch (e) {
+      console.error('[/api/jugador] Error:', e.message);
+      res.status(500).json({ error: 'Error interno' });
+    }
   });
 
   // ── Broadcasts (requieren auth) ───────────────────────────────────────────────

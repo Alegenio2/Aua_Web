@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overlay Jugador AoE2</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .tarjeta {
+      background: linear-gradient(135deg, #1a0f05 0%, #2d1810 100%);
+      border: 2px solid #8b6f47;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 420px;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(139, 111, 71, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tarjeta::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(139, 111, 71, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .contenido {
+      position: relative;
+      z-index: 1;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(139, 111, 71, 0.3);
+    }
+
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8b6f47 0%, #6b5635 100%);
+      border: 2px solid #b8860b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 20px;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .info-header {
+      flex: 1;
+    }
+
+    .nombre {
+      font-size: 18px;
+      font-weight: bold;
+      color: #e8d4b8;
+      margin-bottom: 6px;
+      word-break: break-word;
+    }
+
+    .rank-info {
+      font-size: 12px;
+      color: #999;
+      line-height: 1.6;
+    }
+
+    .rank-info strong {
+      color: #b8860b;
+      font-weight: 600;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: rgba(139, 111, 71, 0.15);
+      border: 1px solid rgba(139, 111, 71, 0.4);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: #b8860b;
+      font-family: 'Courier New', monospace;
+    }
+
+    .stat-sub {
+      font-size: 10px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .racha-box {
+      background: rgba(106, 128, 64, 0.2);
+      border: 1px solid rgba(106, 128, 64, 0.5);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .racha-box.loss {
+      background: rgba(200, 112, 96, 0.15);
+      border-color: rgba(200, 112, 96, 0.4);
+    }
+
+    .racha-label {
+      font-size: 10px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .racha-valor {
+      font-size: 16px;
+      font-weight: bold;
+      color: #a8c860;
+    }
+
+    .racha-box.loss .racha-valor {
+      color: #e89070;
+    }
+
+    .fav-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .fav-item {
+      background: rgba(139, 111, 71, 0.15);
+      border: 1px solid rgba(139, 111, 71, 0.4);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .fav-label {
+      font-size: 9px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .fav-icon {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .fav-nombre {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e8d4b8;
+      word-break: break-word;
+    }
+
+    .loading, .error {
+      text-align: center;
+      color: #999;
+      padding: 40px 20px;
+      font-size: 14px;
+    }
+
+    .error {
+      color: #e89070;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    .loading {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @media (max-width: 480px) {
+      .tarjeta {
+        max-width: 100%;
+        padding: 16px;
+      }
+      .nombre {
+        font-size: 16px;
+      }
+      .stat-value {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="tarjeta">
+  <div class="contenido" id="contenido">
+    <div class="loading">Cargando datos del jugador...</div>
+  </div>
+</div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const profileId = urlParams.get('id') || '195348';
+
+async function cargarDatos() {
+  const contenido = document.getElementById('contenido');
+  try {
+    const res = await fetch(`/api/jugador/${profileId}`);
+    if (!res.ok) throw new Error('No se encontró el jugador');
+
+    const datos = await res.json();
+
+    const iniciales = datos.nombre
+      .split(' ')
+      .map(w => w[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+
+    const civIcons = {
+      'Britons': '🇬🇧', 'Franks': '🇫🇷', 'Goths': '🇩🇪', 'Teutons': '🏰',
+      'Japanese': '🇯🇵', 'Chinese': '🇨🇳', 'Ethiopians': '🇪🇹', 'Persians': '🇮🇷',
+      'Byzantines': '🕯️', 'Celts': '🍀', 'Arabs': '🇸🇦', 'Turks': '🇹🇷',
+      'Vikings': '⛵', 'Mongols': '🏹', 'Indians': '🇮🇳', 'Italians': '🇮🇹',
+      'Berbers': '🏜️', 'Portuguese': '🇵🇹', 'Koreans': '🇰🇷', 'Spanish': '🇪🇸',
+      'Mayans': '🏛️', 'Aztecs': '⚔️', 'Vietnamese': '🇻🇳', 'Sicilians': '🏛️',
+      'Bulgarians': '🇧🇬', 'Bohemians': '🎺', 'Cumans': '🐴', 'Poles': '🇵🇱',
+      'Ottomans': '🕌', 'Malians': '🥁', 'Armenians': '⛪', 'Georgians': '🏔️',
+      'Lithuanian': '🇱🇹', 'Maya': '🏛️'
+    };
+
+    const mapIcons = {
+      'Arabia': '🏜️', 'Black Forest': '🌲', 'Islands': '🏝️', 'Nomad': '🏜️',
+      'Gold Rush': '✨', 'Hideout': '🗻', 'LotW': '🌋', 'Socotra': '🏔️',
+      'Ghost Lake': '👻', 'Amazon': '🌴', 'Arena': '🏟️', 'Valley': '🗻',
+      'MegaRandom': '🎲', 'Lombardia': '🏰', 'Highland': '⛰️'
+    };
+
+    const civIcon = civIcons[datos.civFavorita] || '⚔️';
+    const mapIcon = mapIcons[datos.mapFavorita] || '🗺️';
+
+    let html = `
+      <div class="header">
+        <div class="avatar">${iniciales}</div>
+        <div class="info-header">
+          <div class="nombre">${datos.nombre}</div>
+          <div class="rank-info">
+            Rank <strong>#${datos.rank || 'N/A'}</strong><br>
+            ${datos.clan ? `Clan: <strong>${datos.clan}</strong><br>` : ''}
+            ${datos.country ? `País: ${datos.country}` : ''}
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">ELO Actual</div>
+          <div class="stat-value">${datos.elo || '—'}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">ELO Máximo</div>
+          <div class="stat-value">${datos.elomax || '—'}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Victorias</div>
+          <div class="stat-value">${datos.wins || '—'}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Derrotas</div>
+          <div class="stat-value">${datos.losses || '—'}</div>
+        </div>
+      </div>
+    `;
+
+    if (datos.racha) {
+      const esVictoria = datos.racha.tipo === 'win';
+      html += `
+        <div class="racha-box ${esVictoria ? '' : 'loss'}">
+          <div class="racha-label">${esVictoria ? '🔥 Racha de victorias' : '😔 Racha de derrotas'}</div>
+          <div class="racha-valor">${datos.racha.cantidad} ${esVictoria ? 'Victoria' : 'Derrota'}${datos.racha.cantidad > 1 ? 's' : ''}</div>
+        </div>
+      `;
+    }
+
+    html += `
+      <div class="fav-section">
+        <div class="fav-item">
+          <div class="fav-label">Civ Favorita</div>
+          <div class="fav-icon">${civIcon}</div>
+          <div class="fav-nombre">${datos.civFavorita || 'N/A'}</div>
+        </div>
+        <div class="fav-item">
+          <div class="fav-label">Mapa Favorito</div>
+          <div class="fav-icon">${mapIcon}</div>
+          <div class="fav-nombre">${datos.mapFavorita || 'N/A'}</div>
+        </div>
+      </div>
+    `;
+
+    contenido.innerHTML = html;
+  } catch (err) {
+    contenido.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+    console.error(err);
+  }
+}
+
+cargarDatos();
+setInterval(cargarDatos, 30000);
+</script>
+
+</body>
+</html>

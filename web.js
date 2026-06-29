@@ -30,7 +30,7 @@ function requireAuth(req, res, next) {
 
 module.exports = function setupStream(app, server) {
   const wss = new WebSocket.Server({ server });
-  const lastState = { overlay: null, mapa: null, draft: null, ticker: null };
+  const lastState = { overlay: null, mapa: null, draft: null, ticker: null, jugador: null };
 
   wss.on('connection', (ws, req) => {
     const url   = new URL(req.url, 'http://localhost');
@@ -391,6 +391,32 @@ module.exports = function setupStream(app, server) {
   app.post('/overlay/draft',  requireAuth, (req, res) => { const s = { ...req.body, ts: Date.now() }; broadcast('draft',   s); res.json({ ok: true, ts: s.ts }); });
   app.post('/overlay/update', requireAuth, (req, res) => { const s = { ...req.body, ts: Date.now() }; broadcast('overlay', s); res.json({ ok: true, ts: s.ts }); });
   app.post('/overlay/mapa',   requireAuth, (req, res) => { const s = { ...req.body, ts: Date.now() }; broadcast('mapa',    s); res.json({ ok: true, ts: s.ts }); });
+  app.post('/overlay/jugador', requireAuth, async (req, res) => {
+    const { profileId } = req.body;
+    if (!profileId || !/^\d+$/.test(profileId)) {
+      return res.status(400).json({ error: 'profileId inválido' });
+    }
+    try {
+      const db = getDB();
+      let discordId = null;
+      try {
+        const usuario = db.prepare('SELECT discordId FROM usuarios WHERE profileId = ?').get(String(profileId));
+        discordId = usuario?.discordId || null;
+      } catch (e) {}
+      finally { db.close(); }
+
+      const datos = await obtenerDatosJugadorCompl(profileId, discordId);
+      if (datos?.error) {
+        return res.status(404).json({ error: datos.error });
+      }
+      const s = { datos, ts: Date.now() };
+      broadcast('jugador', s);
+      res.json({ ok: true, ts: s.ts });
+    } catch (e) {
+      console.error('[/overlay/jugador POST] Error:', e.message);
+      res.status(500).json({ error: 'Error interno' });
+    }
+  });
   app.post('/overlay/ticker', requireAuth, (req, res) => {
     const s = { ...req.body, ts: Date.now() };
     lastState.ticker = s;

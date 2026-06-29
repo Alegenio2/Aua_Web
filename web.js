@@ -391,7 +391,7 @@ module.exports = function setupStream(app, server) {
   app.post('/overlay/draft',  requireAuth, (req, res) => { const s = { ...req.body, ts: Date.now() }; broadcast('draft',   s); res.json({ ok: true, ts: s.ts }); });
   app.post('/overlay/update', requireAuth, (req, res) => { const s = { ...req.body, ts: Date.now() }; broadcast('overlay', s); res.json({ ok: true, ts: s.ts }); });
   app.post('/overlay/mapa',   requireAuth, (req, res) => { const s = { ...req.body, ts: Date.now() }; broadcast('mapa',    s); res.json({ ok: true, ts: s.ts }); });
-  app.post('/overlay/jugador', requireAuth, async (req, res) => {
+  app.post('/overlay/jugador', async (req, res) => {
     const { profileId } = req.body;
     if (!profileId || !/^\d+$/.test(profileId)) {
       return res.status(400).json({ error: 'profileId inválido' });

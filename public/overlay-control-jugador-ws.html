@@ -276,19 +276,10 @@ async function enviar() {
   submitBtn.textContent = 'Cargando...';
 
   try {
-    // Obtener token primero (si es necesario)
-    let token = localStorage.getItem('overlayToken');
-    if (!token) {
-      // Para simplificar, si no hay token, intentar sin auth
-      // En producción, aquí iría la lógica de obtener token
-      token = null;
-    }
-
     const response = await fetch('/overlay/jugador', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ profileId })
     });

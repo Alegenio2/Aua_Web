@@ -364,7 +364,19 @@ module.exports = function setupStream(app, server) {
       return res.status(400).json({ error: 'profileId inválido' });
     }
     try {
-      const datos = await obtenerDatosJugadorCompl(profileId);
+      // Buscar discordId en BD local si existe (profileId se almacena como string)
+      const db = getDB();
+      let discordId = null;
+      try {
+        const usuario = db.prepare('SELECT discordId FROM usuarios WHERE profileId = ?').get(String(profileId));
+        discordId = usuario?.discordId || null;
+      } catch (e) {
+        // Tabla no tiene profileId, ignorar
+      } finally {
+        db.close();
+      }
+
+      const datos = await obtenerDatosJugadorCompl(profileId, discordId);
       if (datos?.error) {
         return res.status(404).json({ error: datos.error });
       }

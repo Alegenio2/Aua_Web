@@ -36,6 +36,19 @@ function requireAuth(req, res, next) {
 
 const getDB = () => new Database(path.resolve(process.cwd(), 'botfmg.db'));
 
+function calcularHandicap(elo1, elo2) {
+  if (!elo1 || !elo2) return 0;
+  const diferencia = Math.abs(elo1 - elo2);
+  if (diferencia < 150) return 0;
+  if (diferencia >= 1050) return 35;
+  if (diferencia >= 900) return 30;
+  if (diferencia >= 750) return 25;
+  if (diferencia >= 600) return 20;
+  if (diferencia >= 450) return 15;
+  if (diferencia >= 300) return 10;
+  return 5;
+}
+
 router.get('/', requireAuth, (req, res) => {
   const db = getDB();
   try {
@@ -73,7 +86,7 @@ router.get('/', requireAuth, (req, res) => {
       const uid = req.user.id;
       const rows = db.prepare(`
         SELECT
-          p.id, p.fase, p.ronda, p.grupo_id, p.estado, p.score1, p.score2, p.rec_link, p.coordinado,
+          p.id, p.fase, p.ronda, p.grupo_id, p.estado, p.score1, p.score2, p.rec_link, p.coordinado, p.torneo_id,
           p.jugador1_id, p.jugador2_id, p.equipo1_id, p.equipo2_id,
           u1.nombre AS j1_nombre, u2.nombre AS j2_nombre,
           u1.discordId AS j1_id, u2.discordId AS j2_id,
@@ -81,7 +94,9 @@ router.get('/', requireAuth, (req, res) => {
           e1.jugador1_id AS e1_j1_id, e1.jugador2_id AS e1_j2_id,
           e2.jugador1_id AS e2_j1_id, e2.jugador2_id AS e2_j2_id,
           g.nombre AS grupo_nombre,
-          t.nombre AS torneo_nombre, t.slug AS torneo_slug
+          t.nombre AS torneo_nombre, t.slug AS torneo_slug,
+          i1.elo_inscripcion AS elo1_inscripcion,
+          i2.elo_inscripcion AS elo2_inscripcion
         FROM partidos p
         LEFT JOIN usuarios u1 ON p.jugador1_id = u1.discordId
         LEFT JOIN usuarios u2 ON p.jugador2_id = u2.discordId
@@ -89,6 +104,8 @@ router.get('/', requireAuth, (req, res) => {
         LEFT JOIN equipos  e2 ON p.equipo2_id  = e2.id
         LEFT JOIN grupos   g  ON p.grupo_id    = g.id
         LEFT JOIN torneos  t  ON p.torneo_id   = t.id
+        LEFT JOIN inscripciones i1 ON i1.torneo_id = p.torneo_id AND i1.usuario_id = p.jugador1_id
+        LEFT JOIN inscripciones i2 ON i2.torneo_id = p.torneo_id AND i2.usuario_id = p.jugador2_id
         WHERE p.jugador1_id = ? OR p.jugador2_id = ?
            OR p.equipo1_id IN (SELECT id FROM equipos WHERE jugador1_id = ? OR jugador2_id = ?)
            OR p.equipo2_id IN (SELECT id FROM equipos WHERE jugador1_id = ? OR jugador2_id = ?)
@@ -96,19 +113,27 @@ router.get('/', requireAuth, (req, res) => {
       `).all(uid, uid, uid, uid, uid, uid);
 
       misPartidos = rows.map(p => {
+        const elo1 = p.elo1_inscripcion;
+        const elo2 = p.elo2_inscripcion;
+        const handicap = calcularHandicap(elo1, elo2);
+        const diferenciaElo = Math.abs((elo1 || 0) - (elo2 || 0));
+        const favorecido = (elo1 || 0) < (elo2 || 0) ? 'j1' : 'j2';
+
         if (p.equipo1_id) {
           const enEquipo1 = p.e1_j1_id === uid || p.e1_j2_id === uid;
           const rival    = enEquipo1 ? p.eq2_nombre : p.eq1_nombre;
           const gane     = p.estado === 'finalizado' &&
             ((enEquipo1 && p.score1 > p.score2) || (!enEquipo1 && p.score2 > p.score1));
           return { ...p, rival, gane, esEquipo: true,
-            j1_id: enEquipo1 ? uid : null, j2_id: enEquipo1 ? null : uid };
+            j1_id: enEquipo1 ? uid : null, j2_id: enEquipo1 ? null : uid,
+            elo1, elo2, handicap, diferenciaElo, favorecido };
         }
         const esSoy1 = p.j1_id === uid;
         const rival  = esSoy1 ? p.j2_nombre : p.j1_nombre;
         const gane   = p.estado === 'finalizado' &&
           ((esSoy1 && p.score1 > p.score2) || (!esSoy1 && p.score2 > p.score1));
-        return { ...p, rival, gane, esEquipo: false };
+        return { ...p, rival, gane, esEquipo: false,
+          elo1, elo2, handicap, diferenciaElo, favorecido };
       });
     }
 

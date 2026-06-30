@@ -232,6 +232,30 @@
             <div class="player-name right"><%= p.esEquipo ? p.eq2_nombre : p.j2_nombre %></div>
           </div>
 
+          <% if (p.elo1 || p.elo2) { %>
+          <div style="padding:10px 14px;border-top:0.5px solid var(--brown2);border-bottom:0.5px solid var(--brown2);font-size:12px">
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:6px">
+              <div style="text-align:left;color:var(--celeste)">
+                <strong style="color:var(--text)">ELO Inscripción</strong>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px"><%= p.elo1 || '—' %></div>
+              </div>
+              <div style="text-align:center">
+                <div style="color:var(--gold);font-size:11px;letter-spacing:0.5px">DIFERENCIA</div>
+                <div style="color:var(--text);font-weight:600"><%= p.diferenciaElo %></div>
+              </div>
+              <div style="text-align:right;color:var(--rosa)">
+                <strong style="color:var(--text)">ELO Inscripción</strong>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px"><%= p.elo2 || '—' %></div>
+              </div>
+            </div>
+            <% if (p.handicap > 0) { %>
+            <div style="text-align:center;padding:6px;background:rgba(232,200,122,0.1);border:0.5px solid rgba(232,200,122,0.2);border-radius:4px;font-size:11px;color:var(--gold)">
+              ⚖️ Handicap: <strong><%= p.handicap %>%</strong> para <%= p.favorecido === 'j1' ? (p.esEquipo ? p.eq1_nombre : p.j1_nombre) : (p.esEquipo ? p.eq2_nombre : p.j2_nombre) %>
+            </div>
+            <% } %>
+          </div>
+          <% } %>
+
           <div class="match-actions">
             <div class="match-action" style="padding:0;border-right:0.5px solid var(--brown2)">
               <form class="coordinar-form coordinar-wrap" data-id="<%= p.id %>" style="width:100%">
@@ -439,13 +463,20 @@ document.querySelectorAll('.coordinar-form').forEach(form => {
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const partidoId = form.dataset.id;
-    const fecha_hora = form.querySelector('[name=fecha_hora]').value;
-    if (!fecha_hora) return;
+    const fechaLocal = form.querySelector('[name=fecha_hora]').value;
+    if (!fechaLocal) return;
     try {
+      // Convertir datetime-local a UTC (igual que en partido.ejs)
+      const [d, t] = fechaLocal.split('T');
+      const [a, m, da] = d.split('-');
+      const [h, min] = t.split(':');
+      const fechaEnZonaLocal = new Date(a, m - 1, da, h, min, 0);
+      const fechaISO = fechaEnZonaLocal.toISOString();
+
       const r = await fetch('/api/partidos/coordinar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ partidoId, fecha_hora })
+        body: JSON.stringify({ partidoId, fecha_hora: fechaISO })
       });
       const d = await r.json();
       if (d.success) location.reload();

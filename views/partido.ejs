@@ -279,14 +279,22 @@ function mostrarPrev(id, msg, color) {
 async function coordinarPartido() {
   const btn = document.getElementById('btn-coordinar');
   const fb  = document.getElementById('coordinar-feedback');
-  const fecha = document.getElementById('coordinar-fecha').value;
-  if (!fecha) { fb.style.display='block'; fb.style.color='#c87060'; fb.textContent='Seleccioná una fecha.'; return; }
+  const fechaLocal = document.getElementById('coordinar-fecha').value;
+  if (!fechaLocal) { fb.style.display='block'; fb.style.color='#c87060'; fb.textContent='Seleccioná una fecha.'; return; }
   btn.disabled = true;
   try {
+    // datetime-local devuelve fecha sin zona horaria, interpretarla como zona local del navegador
+    // new Date(year, month, day, hours, minutes) interpreta como zona local y convierte a UTC internamente
+    const [d, t] = fechaLocal.split('T');
+    const [a, m, da] = d.split('-');
+    const [h, min] = t.split(':');
+    const fechaEnZonaLocal = new Date(a, m - 1, da, h, min, 0);
+    const fechaISO = fechaEnZonaLocal.toISOString();
+
     const r = await fetch('/api/partidos/coordinar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ partidoId: '<%= partido.id %>', fecha_hora: fecha })
+      body: JSON.stringify({ partidoId: '<%= partido.id %>', fecha_hora: fechaISO })
     });
     const d = await r.json();
     fb.style.display = 'block';

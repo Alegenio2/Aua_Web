@@ -226,14 +226,14 @@
             <div class="match-round"><%= p.grupo_nombre || 'Ronda ' + p.ronda %></div>
           </div>
 
-          <div class="match-body" style="align-items:flex-start">
+          <div class="match-body" style="justify-content:space-between;align-items:flex-start">
             <div style="display:flex;flex-direction:column;align-items:flex-start">
-              <div class="player-name"><%= p.esEquipo ? p.eq1_nombre : p.j1_nombre %></div>
+              <div class="player-name" style="flex:none"><%= p.esEquipo ? p.eq1_nombre : p.j1_nombre %></div>
               <% if (p.elo1) { %><div style="font-size:11px;color:var(--muted);margin-top:2px">ELO <%= p.elo1 %></div><% } %>
             </div>
             <div class="vs-badge">VS</div>
             <div style="display:flex;flex-direction:column;align-items:flex-end">
-              <div class="player-name"><%= p.esEquipo ? p.eq2_nombre : p.j2_nombre %></div>
+              <div class="player-name" style="flex:none"><%= p.esEquipo ? p.eq2_nombre : p.j2_nombre %></div>
               <% if (p.elo2) { %><div style="font-size:11px;color:var(--muted);margin-top:2px">ELO <%= p.elo2 %></div><% } %>
             </div>
           </div>

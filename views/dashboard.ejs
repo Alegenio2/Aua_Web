@@ -227,32 +227,20 @@
           </div>
 
           <div class="match-body">
-            <div class="player-name"><%= p.esEquipo ? p.eq1_nombre : p.j1_nombre %></div>
+            <div>
+              <div class="player-name"><%= p.esEquipo ? p.eq1_nombre : p.j1_nombre %></div>
+              <% if (p.elo1) { %><div style="font-size:11px;color:var(--muted);margin-top:2px">ELO <%= p.elo1 %></div><% } %>
+            </div>
             <div class="vs-badge">VS</div>
-            <div class="player-name right"><%= p.esEquipo ? p.eq2_nombre : p.j2_nombre %></div>
+            <div style="text-align:right">
+              <div class="player-name"><%= p.esEquipo ? p.eq2_nombre : p.j2_nombre %></div>
+              <% if (p.elo2) { %><div style="font-size:11px;color:var(--muted);margin-top:2px">ELO <%= p.elo2 %></div><% } %>
+            </div>
           </div>
 
-          <% if (p.elo1 || p.elo2) { %>
-          <div style="padding:10px 14px;border-top:0.5px solid var(--brown2);border-bottom:0.5px solid var(--brown2);font-size:12px">
-            <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:6px">
-              <div style="text-align:left;color:var(--celeste)">
-                <strong style="color:var(--text)">ELO Inscripción</strong>
-                <div style="font-size:11px;color:var(--muted);margin-top:2px"><%= p.elo1 || '—' %></div>
-              </div>
-              <div style="text-align:center">
-                <div style="color:var(--gold);font-size:11px;letter-spacing:0.5px">DIFERENCIA</div>
-                <div style="color:var(--text);font-weight:600"><%= p.diferenciaElo %></div>
-              </div>
-              <div style="text-align:right;color:var(--rosa)">
-                <strong style="color:var(--text)">ELO Inscripción</strong>
-                <div style="font-size:11px;color:var(--muted);margin-top:2px"><%= p.elo2 || '—' %></div>
-              </div>
-            </div>
-            <% if (p.handicap > 0) { %>
-            <div style="text-align:center;padding:6px;background:rgba(232,200,122,0.1);border:0.5px solid rgba(232,200,122,0.2);border-radius:4px;font-size:11px;color:var(--gold)">
-              ⚖️ Handicap: <strong><%= p.handicap %>%</strong> para <%= p.favorecido === 'j1' ? (p.esEquipo ? p.eq1_nombre : p.j1_nombre) : (p.esEquipo ? p.eq2_nombre : p.j2_nombre) %>
-            </div>
-            <% } %>
+          <% if (p.handicap > 0) { %>
+          <div style="padding:8px 14px;border-top:0.5px solid var(--brown2);text-align:center;font-size:11px;color:var(--gold)">
+            ⚖️ Handicap: <strong><%= p.handicap %>%</strong> para <%= p.favorecido === 'j1' ? (p.esEquipo ? p.eq1_nombre : p.j1_nombre) : (p.esEquipo ? p.eq2_nombre : p.j2_nombre) %>
           </div>
           <% } %>
 

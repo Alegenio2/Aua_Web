@@ -187,7 +187,10 @@ router.post('/coordinar', requireAuth, (req, res) => {
 
     if (!partido) return res.json({ error: 'Partido no encontrado.' });
 
-    db.prepare('UPDATE partidos SET coordinado = ? WHERE id = ?').run(fecha_hora.replace('T', ' '), partidoId);
+    const dateAsUTC = new Date(fecha_hora);
+    const dateURYToUTC = new Date(dateAsUTC.getTime() + 3 * 60 * 60 * 1000);
+    const dateUTC = dateURYToUTC.toISOString().slice(0, 19).replace('T', ' ');
+    db.prepare('UPDATE partidos SET coordinado = ? WHERE id = ?').run(dateUTC, partidoId);
 
     const chCoord = process.env.DISCORD_COORDINADOS_CHANNEL;
     if (chCoord && req.app.locals.notifyDiscord) {

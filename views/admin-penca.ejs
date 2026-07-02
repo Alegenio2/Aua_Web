@@ -96,13 +96,30 @@
       <!-- Definir Campeón -->
       <% if (torneo.participantes && torneo.participantes.length > 0) { %>
       <div style="margin-bottom:16px;padding:14px 16px;background:rgba(232,200,122,0.04);border:0.5px solid rgba(232,200,122,0.2);border-radius:8px">
-        <div style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">
+        <div style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px">
           <i class="fas fa-crown" style="margin-right:6px"></i>Definir Campeón
           <% if (torneo.campeon_id) { %>
-          <span style="color:var(--win);margin-left:8px;font-size:10px">
+          <span style="color:var(--win);font-size:10px">
             <i class="fas fa-check" style="margin-right:3px"></i>Ya definido
           </span>
           <% } %>
+          <span style="flex:1"></span>
+          <span style="font-size:10px;color:<%= torneo.campeon_override === 1 ? '#22c55e' : torneo.campeon_override === 0 ? '#cc5555' : 'var(--dim)' %>;text-transform:none;font-weight:400">
+            <%= torneo.campeonBloqueado ? (torneo.campeon_override === 1 ? 'Votación forzada abierta' : 'Votación cerrada') : 'Votación abierta' %>
+          </span>
+          <form method="POST" action="/admin/penca/campeon-toggle" style="display:flex;gap:6px;margin:0">
+            <input type="hidden" name="torneo_id" value="<%= torneo.id %>" />
+            <% if (torneo.campeon_override !== 1) { %>
+            <button type="submit" name="accion" value="abrir" style="padding:4px 10px;font-size:10px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.5);color:#22c55e;border-radius:5px;cursor:pointer;font-weight:600">
+              <i class="fas fa-unlock" style="margin-right:4px"></i>Reabrir
+            </button>
+            <% } %>
+            <% if (torneo.campeon_override !== null) { %>
+            <button type="submit" name="accion" value="auto" style="padding:4px 10px;font-size:10px;background:rgba(255,255,255,0.05);border:1px solid var(--brown);color:var(--dim);border-radius:5px;cursor:pointer">
+              Auto
+            </button>
+            <% } %>
+          </form>
         </div>
         <form method="POST" action="/admin/penca/definir-campeon" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <input type="hidden" name="torneo_id" value="<%= torneo.id %>" />
@@ -131,6 +148,12 @@
       <% } else { %>
       <% torneo.partidos.forEach(p => { %>
       <div class="partido-card">
+        <% if (p.estado === 'finalizado') { %>
+        <div class="partido-info">
+          <strong><%= p.j1 %> <%= p.score1 %> – <%= p.score2 %> <%= p.j2 %></strong>
+          <div class="round">Ronda <%= p.ronda %> · Finalizado</div>
+        </div>
+        <% } else { %>
         <form method="POST" action="/api/partidos/penca" class="partido-form">
           <input type="hidden" name="partidoId" value="<%= p.id %>" />
 
@@ -152,6 +175,26 @@
 
           <button type="submit" class="btn-save">Guardar resultado</button>
         </form>
+        <% } %>
+
+        <% if (p.bloqueado || p.votacion_forzada !== null) { %>
+        <form method="POST" action="/admin/penca/partido-toggle" style="display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--brown)">
+          <input type="hidden" name="partido_id" value="<%= p.id %>" />
+          <span style="font-size:10px;color:<%= p.votacion_forzada === 1 ? '#22c55e' : 'var(--dim)' %>;flex:1">
+            <%= p.votacion_forzada === 1 ? 'Votación forzada abierta' : 'Votación cerrada' %>
+          </span>
+          <% if (p.votacion_forzada !== 1) { %>
+          <button type="submit" name="accion" value="abrir" style="padding:4px 10px;font-size:10px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.5);color:#22c55e;border-radius:5px;cursor:pointer;font-weight:600">
+            <i class="fas fa-unlock" style="margin-right:4px"></i>Reabrir votación
+          </button>
+          <% } %>
+          <% if (p.votacion_forzada !== null) { %>
+          <button type="submit" name="accion" value="auto" style="padding:4px 10px;font-size:10px;background:rgba(255,255,255,0.05);border:1px solid var(--brown);color:var(--dim);border-radius:5px;cursor:pointer">
+            Auto
+          </button>
+          <% } %>
+        </form>
+        <% } %>
       </div>
       <% }) %>
       <% } %>

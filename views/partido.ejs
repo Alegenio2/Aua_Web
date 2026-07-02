@@ -186,7 +186,7 @@
 
 <script>
 // ── Draft de civs ─────────────────────────────────────────────────────────────
-let civDraftVerificado = !!('<%= partido.draftcivs || "" %>'.trim());
+let civDraftVerificado = !!(<%- JSON.stringify(partido.draftcivs || '').replace(/</g, '\\u003c') %>.trim());
 
 function alCambiarCivs() {
   civDraftVerificado = false;
@@ -283,18 +283,12 @@ async function coordinarPartido() {
   if (!fechaLocal) { fb.style.display='block'; fb.style.color='#c87060'; fb.textContent='Seleccioná una fecha.'; return; }
   btn.disabled = true;
   try {
-    // datetime-local devuelve fecha sin zona horaria, interpretarla como zona local del navegador
-    // new Date(year, month, day, hours, minutes) interpreta como zona local y convierte a UTC internamente
-    const [d, t] = fechaLocal.split('T');
-    const [a, m, da] = d.split('-');
-    const [h, min] = t.split(':');
-    const fechaEnZonaLocal = new Date(a, m - 1, da, h, min, 0);
-    const fechaISO = fechaEnZonaLocal.toISOString();
+    const fechaParaGuardar = fechaLocal;
 
     const r = await fetch('/api/partidos/coordinar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ partidoId: '<%= partido.id %>', fecha_hora: fechaISO })
+      body: JSON.stringify({ partidoId: '<%= partido.id %>', fecha_hora: fechaParaGuardar })
     });
     const d = await r.json();
     fb.style.display = 'block';

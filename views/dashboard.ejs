@@ -454,17 +454,12 @@ document.querySelectorAll('.coordinar-form').forEach(form => {
     const fechaLocal = form.querySelector('[name=fecha_hora]').value;
     if (!fechaLocal) return;
     try {
-      // Convertir datetime-local a UTC (igual que en partido.ejs)
-      const [d, t] = fechaLocal.split('T');
-      const [a, m, da] = d.split('-');
-      const [h, min] = t.split(':');
-      const fechaEnZonaLocal = new Date(a, m - 1, da, h, min, 0);
-      const fechaISO = fechaEnZonaLocal.toISOString();
+      const fechaParaGuardar = fechaLocal;
 
       const r = await fetch('/api/partidos/coordinar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ partidoId, fecha_hora: fechaISO })
+        body: JSON.stringify({ partidoId, fecha_hora: fechaParaGuardar })
       });
       const d = await r.json();
       if (d.success) location.reload();

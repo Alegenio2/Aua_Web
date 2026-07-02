@@ -115,7 +115,10 @@ async function buscarEstadisticasEncuentro(aoe2Id1, aoe2Id2, totalPartidas) {
     const siguiente = duelos[i + 1];
     if (siguiente && actual.mapName === siguiente.mapName) {
       const diffHoras = Math.abs(new Date(actual.started) - new Date(siguiente.started)) / 3600000;
-      if (diffHoras < 1.5) {
+      const siguienteRota = (siguiente.teams ?? []).some(team =>
+        (team.players ?? []).some(player => player.won === null)
+      );
+      if (diffHoras < 1.5 && siguienteRota) {
         filtrados.push(actual);
         i++; // Saltamos el restore
         continue;

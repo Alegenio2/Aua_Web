@@ -1,6 +1,7 @@
 const express = require('express');
 const Database = require('better-sqlite3');
 const path = require('path');
+const { esBloqueado, calcularCerrada, calcularCampeonBloqueado } = require('../lib/penca');
 
 const router = express.Router();
 
@@ -13,28 +14,6 @@ function requireAuth(req, res, next) {
 }
 
 const getDB = () => new Database(path.resolve(process.cwd(), 'botfmg.db'));
-
-function calcularCerrada(torneo, partidos) {
-  if (torneo.penca_abierta === 0) return true;
-  if (torneo.penca_abierta === 1) return false;
-  const activos = partidos.filter(p => p.estado !== 'finalizado');
-  if (activos.length === 0) return true;
-  const ahora = new Date();
-  return activos.some(p => p.coordinado && new Date(p.coordinado) <= ahora);
-}
-
-// El campeón se bloquea cuando arranca el primer partido del torneo, para siempre.
-function calcularCampeonBloqueado(partidos) {
-  const ahora = new Date();
-  return partidos.some(p =>
-    p.estado === 'finalizado' ||
-    (p.coordinado && new Date(p.coordinado) <= ahora)
-  );
-}
-
-function esBloqueado(p) {
-  return p.estado === 'finalizado' || (p.coordinado && new Date(p.coordinado) <= new Date());
-}
 
 // GET /penca/:slug
 router.get('/:slug', requireAuth, (req, res) => {
@@ -61,7 +40,7 @@ router.get('/:slug', requireAuth, (req, res) => {
 
     const partidos_ = partidos.map(p => ({ ...p, bloqueado: esBloqueado(p) }));
     const cerrada = calcularCerrada(torneo, partidos);
-    const campeonBloqueado = calcularCampeonBloqueado(partidos);
+    const campeonBloqueado = calcularCampeonBloqueado(partidos, torneo);
 
     const esEquipo = torneo.tipo !== '1v1';
     const inscriptos = esEquipo
@@ -135,13 +114,13 @@ router.post('/votar', requireAuth, (req, res) => {
     const torneo = db.prepare('SELECT * FROM torneos WHERE id = ?').get(torneo_id);
     if (!torneo) return res.redirect('/dashboard?err=' + encodeURIComponent('Torneo no encontrado.'));
 
-    const todosLosPartidos = db.prepare('SELECT id, estado, coordinado FROM partidos WHERE torneo_id = ?').all(torneo_id);
+    const todosLosPartidos = db.prepare('SELECT id, estado, coordinado, votacion_forzada FROM partidos WHERE torneo_id = ?').all(torneo_id);
     const cerrada = calcularCerrada(torneo, todosLosPartidos);
     if (cerrada) {
       return res.redirect(`/penca/${torneo.slug}?err=` + encodeURIComponent('Las apuestas ya cerraron.'));
     }
 
-    const campeonBloqueado = calcularCampeonBloqueado(todosLosPartidos);
+    const campeonBloqueado = calcularCampeonBloqueado(todosLosPartidos, torneo);
 
     // Parsear scores: score1_45, score2_45 → { 45: { s1, s2 } }
     const predicciones = {};

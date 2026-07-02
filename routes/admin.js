@@ -2,6 +2,7 @@ const express = require('express');
 const Database = require('better-sqlite3');
 const path = require('path');
 const { obtenerEloActual } = require('../lib/aoe2');
+const { esBloqueado, calcularCerrada, calcularCampeonBloqueado } = require('../lib/penca');
 
 const router = express.Router();
 
@@ -104,7 +105,6 @@ router.get('/penca', requireAdmin, (req, res) => {
       });
     }
 
-    const ahora = new Date();
     const torneosConPartidos = torneosActivos.map(torneo => {
       const partidos = db.prepare(`
         SELECT p.*,
@@ -115,19 +115,19 @@ router.get('/penca', requireAdmin, (req, res) => {
         LEFT JOIN usuarios u2 ON p.jugador2_id = u2.discordId
         LEFT JOIN equipos  e1 ON p.equipo1_id  = e1.id
         LEFT JOIN equipos  e2 ON p.equipo2_id  = e2.id
-        WHERE p.torneo_id = ? AND p.estado != 'finalizado'
-      `).all(torneo.id).map(p => ({ ...p, j1: p.eq1 || p.j1, j2: p.eq2 || p.j2 }));
-      const todosPartidos = db.prepare('SELECT estado, coordinado FROM partidos WHERE torneo_id = ?').all(torneo.id);
+        WHERE p.torneo_id = ?
+        ORDER BY CASE WHEN p.estado = 'finalizado' THEN 1 ELSE 0 END, p.id
+      `).all(torneo.id).map(p => ({ ...p, j1: p.eq1 || p.j1, j2: p.eq2 || p.j2, bloqueado: esBloqueado(p) }));
+      const todosPartidos = db.prepare('SELECT estado, coordinado, votacion_forzada FROM partidos WHERE torneo_id = ?').all(torneo.id);
       let estadoPenca;
       if (torneo.penca_abierta === 0) {
         estadoPenca = 'cerrada_admin';
       } else if (torneo.penca_abierta === 1) {
         estadoPenca = 'abierta_admin';
       } else {
-        const activos = todosPartidos.filter(p => p.estado !== 'finalizado');
-        const bloqueante = activos.length === 0 || activos.some(p => p.coordinado && new Date(p.coordinado) <= ahora);
-        estadoPenca = bloqueante ? 'cerrada_auto' : 'abierta_auto';
+        estadoPenca = calcularCerrada(torneo, todosPartidos) ? 'cerrada_auto' : 'abierta_auto';
       }
+      const campeonBloqueado = calcularCampeonBloqueado(todosPartidos, torneo);
       // Participantes para el selector de campeón (equipos o jugadores)
       const esEquipo = torneo.tipo !== '1v1';
       const participantes = esEquipo
@@ -142,7 +142,7 @@ router.get('/penca', requireAdmin, (req, res) => {
             WHERE i.torneo_id = ? ORDER BY u.nombre
           `).all(torneo.id);
 
-      return { ...torneo, partidos, estadoPenca, participantes, esEquipo };
+      return { ...torneo, partidos, estadoPenca, campeonBloqueado, participantes, esEquipo };
     });
 
     res.render('admin-penca', {
@@ -205,6 +205,46 @@ router.post('/penca/toggle', requireAdmin, (req, res) => {
   } catch (e) {
     console.error('Error toggle penca:', e);
     res.redirect('/admin/penca?err=' + encodeURIComponent('Error al cambiar estado de la penca.'));
+  } finally {
+    db.close();
+  }
+});
+
+// POST /admin/penca/partido-toggle — override individual de votación por partido
+router.post('/penca/partido-toggle', requireAdmin, (req, res) => {
+  const db = getDB();
+  try {
+    const { partido_id, accion } = req.body;
+    if (!partido_id || !['abrir', 'cerrar', 'auto'].includes(accion)) {
+      return res.redirect('/admin/penca?err=' + encodeURIComponent('Datos inválidos.'));
+    }
+    const valor = accion === 'abrir' ? 1 : accion === 'cerrar' ? 0 : null;
+    db.prepare('UPDATE partidos SET votacion_forzada = ? WHERE id = ?').run(valor, partido_id);
+    const msg = accion === 'abrir' ? 'Votación del partido reabierta.' : accion === 'cerrar' ? 'Votación del partido cerrada.' : 'Votación del partido volvió a automático.';
+    res.redirect('/admin/penca?msg=' + encodeURIComponent(msg));
+  } catch (e) {
+    console.error('Error toggle partido penca:', e);
+    res.redirect('/admin/penca?err=' + encodeURIComponent('Error al cambiar la votación del partido.'));
+  } finally {
+    db.close();
+  }
+});
+
+// POST /admin/penca/campeon-toggle — override de votación de campeón por torneo
+router.post('/penca/campeon-toggle', requireAdmin, (req, res) => {
+  const db = getDB();
+  try {
+    const { torneo_id, accion } = req.body;
+    if (!torneo_id || !['abrir', 'cerrar', 'auto'].includes(accion)) {
+      return res.redirect('/admin/penca?err=' + encodeURIComponent('Datos inválidos.'));
+    }
+    const valor = accion === 'abrir' ? 1 : accion === 'cerrar' ? 0 : null;
+    db.prepare('UPDATE torneos SET campeon_override = ? WHERE id = ?').run(valor, torneo_id);
+    const msg = accion === 'abrir' ? 'Votación de campeón reabierta.' : accion === 'cerrar' ? 'Votación de campeón cerrada.' : 'Votación de campeón volvió a automático.';
+    res.redirect('/admin/penca?msg=' + encodeURIComponent(msg));
+  } catch (e) {
+    console.error('Error toggle campeón penca:', e);
+    res.redirect('/admin/penca?err=' + encodeURIComponent('Error al cambiar la votación de campeón.'));
   } finally {
     db.close();
   }

@@ -30,6 +30,26 @@ function requireAdmin(req, res, next) {
 
 const getDB = () => new Database(path.resolve(__dirname, '../../botfmg.db'));
 
+function normalizarFechaHora(fecha_hora) {
+  if (!fecha_hora) return null;
+
+  const raw = String(fecha_hora).trim();
+  if (!raw) return null;
+
+  const matchLocal = raw.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::\d{2})?$/);
+  if (matchLocal) {
+    return `${matchLocal[1]}T${matchLocal[2]}:00`;
+  }
+
+  const date = new Date(raw);
+  if (!Number.isNaN(date.getTime())) {
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 19).replace('T', ' ');
+  }
+
+  return null;
+}
+
 // Asigna el ganador de un partido de bracket al slot correcto en la siguiente ronda
 function avanzarBracket(db, partidoId, ganadorId) {
   const id = Number(partidoId);
@@ -109,7 +129,9 @@ router.post('/resultado', requireAuth, upload.single('rec_file'), async (req, re
       const fileName = `u1_${safeId1}_vs_u2_${safeId2}_partido_${partidoId}.zip`;
       const uploadDir = path.join(__dirname, '../../public/recs');
       if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-      fs.renameSync(req.file.path, path.join(uploadDir, fileName));
+      const destinationPath = path.join(uploadDir, fileName);
+      if (fs.existsSync(destinationPath)) fs.unlinkSync(destinationPath);
+      fs.renameSync(req.file.path, destinationPath);
       rec_link_path = `/recs/${fileName}`;
     }
 
@@ -174,7 +196,8 @@ router.post('/coordinar', requireAuth, (req, res) => {
     const { partidoId, fecha_hora } = req.body;
     if (!partidoId || !fecha_hora) return res.json({ error: 'Datos incompletos.' });
 
-    if (isNaN(new Date(fecha_hora).getTime())) return res.json({ error: 'Fecha y hora inválidas.' });
+    const fechaParaGuardar = normalizarFechaHora(fecha_hora);
+    if (!fechaParaGuardar) return res.json({ error: 'Fecha y hora inválidas.' });
 
     const partido = db.prepare(`
       SELECT p.*, u1.nombre as j1_nombre, u2.nombre as j2_nombre, t.nombre as torneo_nombre
@@ -187,14 +210,11 @@ router.post('/coordinar', requireAuth, (req, res) => {
 
     if (!partido) return res.json({ error: 'Partido no encontrado.' });
 
-    const dateAsUTC = new Date(fecha_hora);
-    const dateURYToUTC = new Date(dateAsUTC.getTime() + 3 * 60 * 60 * 1000);
-    const dateUTC = dateURYToUTC.toISOString().slice(0, 19).replace('T', ' ');
-    db.prepare('UPDATE partidos SET coordinado = ? WHERE id = ?').run(dateUTC, partidoId);
+    db.prepare('UPDATE partidos SET coordinado = ? WHERE id = ?').run(fechaParaGuardar, partidoId);
 
     const chCoord = process.env.DISCORD_COORDINADOS_CHANNEL;
     if (chCoord && req.app.locals.notifyDiscord) {
-      const fechaObj = new Date(fecha_hora);
+      const fechaObj = new Date(fechaParaGuardar.replace(' ', 'T'));
       const fechaFormateada = fechaObj.toLocaleString('es-UY', {
         timeZone: 'America/Montevideo',
         weekday: 'long',

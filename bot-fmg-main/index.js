@@ -8,14 +8,27 @@ const {
 
 const { client } = require('./discordClient');
 const { obtenerEloActual } = require('../lib/aoe2');
+const { actualizarYPublicarRankingClan } = require('./utils/rankingClan');
 
 const ROL_ACCESO_ID = process.env.ROL_ACCESO_ID || '1377760878807613520';
 const getDB = () => new Database(path.resolve(process.cwd(), 'botfmg.db'));
 
 // ── Ready ─────────────────────────────────────────────────────────────────────
-client.once('ready', (c) => {
+client.once('ready', async (c) => {
   console.log(`🤖 ${c.user.username} online`);
   c.user.setActivity('Age of Empires II', { type: ActivityType.Playing });
+
+  const servidores = Object.keys(require('./botConfig.json').servidores || {});
+  for (const guildId of servidores) {
+    await actualizarYPublicarRankingClan(c, guildId);
+  }
+
+  setInterval(() => {
+    const servidores = Object.keys(require('./botConfig.json').servidores || {});
+    for (const guildId of servidores) {
+      actualizarYPublicarRankingClan(c, guildId).catch(() => {});
+    }
+  }, 7 * 24 * 60 * 60 * 1000);
 });
 
 // ── Bienvenida ────────────────────────────────────────────────────────────────

@@ -50,6 +50,24 @@ function normalizarFechaHora(fecha_hora) {
   return null;
 }
 
+function normalizarDraftLink(value) {
+  if (!value) return '';
+  const raw = String(value).trim();
+  if (!raw) return '';
+
+  const codeMatch = raw.match(/^[A-Za-z0-9]{3,10}$/);
+  if (codeMatch) {
+    return `https://aoe2cm.net/draft/${codeMatch[0]}`;
+  }
+
+  const urlMatch = raw.match(/^(?:https?:\/\/)?(?:www\.)?aoe2cm\.net\/(?:draft\/)?([A-Za-z0-9]{3,10})$/i);
+  if (urlMatch) {
+    return `https://aoe2cm.net/draft/${urlMatch[1]}`;
+  }
+
+  return raw;
+}
+
 // Asigna el ganador de un partido de bracket al slot correcto en la siguiente ronda
 function avanzarBracket(db, partidoId, ganadorId) {
   const id = Number(partidoId);
@@ -94,6 +112,8 @@ router.post('/resultado', requireAuth, upload.single('rec_file'), async (req, re
     const { partidoId, score1: s1Raw, score2: s2Raw, draftmap, draftcivs } = req.body;
     const score1 = parseInt(s1Raw);
     const score2 = parseInt(s2Raw);
+    const draftmapLink = normalizarDraftLink(draftmap);
+    const draftcivsLink = normalizarDraftLink(draftcivs);
 
     if (isNaN(score1) || isNaN(score2) || score1 < 0 || score2 < 0) {
       if (req.file) fs.unlinkSync(req.file.path);
@@ -144,7 +164,7 @@ router.post('/resultado', requireAuth, upload.single('rec_file'), async (req, re
     db.prepare(`
       UPDATE partidos SET score1=?, score2=?, ganador_id=?, draftmap=?, draftcivs=?, rec_link=?, estado='finalizado', fecha=datetime('now')
       WHERE id=?
-    `).run(score1, score2, ganadorId, draftmap, draftcivs, rec_link_path, partidoId);
+    `).run(score1, score2, ganadorId, draftmapLink, draftcivsLink, rec_link_path, partidoId);
 
     avanzarBracket(db, partidoId, ganadorId);
 
@@ -214,16 +234,20 @@ router.post('/coordinar', requireAuth, (req, res) => {
 
     const chCoord = process.env.DISCORD_COORDINADOS_CHANNEL;
     if (chCoord && req.app.locals.notifyDiscord) {
-      const fechaObj = new Date(fechaParaGuardar.replace(' ', 'T'));
-      const fechaFormateada = fechaObj.toLocaleString('es-UY', {
-        timeZone: 'America/Montevideo',
+      const [datePart, timePart] = fechaParaGuardar.split('T');
+      const [year, month, day] = datePart.split('-').map(Number);
+      const [hour, minute] = timePart.split(':').map(Number);
+      const fechaObj = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+      const fechaFormateada = new Intl.DateTimeFormat('es-UY', {
+        timeZone: 'UTC',
         weekday: 'long',
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
-      });
+        minute: '2-digit',
+        hour12: true
+      }).format(fechaObj);
       const embed = new EmbedBuilder()
         .setTitle('Partido coordinado')
         .setColor('#22c55e')

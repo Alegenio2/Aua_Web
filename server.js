@@ -42,6 +42,8 @@ function runMigrations() {
   try { _db.prepare('ALTER TABLE torneos ADD COLUMN elo_max_promedio INTEGER DEFAULT NULL').run(); } catch (_) {}
   try { _db.prepare('ALTER TABLE torneos ADD COLUMN costo_inscripcion INTEGER DEFAULT NULL').run(); } catch (_) {}
   try { _db.prepare('ALTER TABLE inscripciones ADD COLUMN pago INTEGER DEFAULT 0').run(); } catch (_) {}
+  try { _db.prepare('ALTER TABLE partidos ADD COLUMN votacion_forzada INTEGER DEFAULT NULL').run(); } catch (_) {}
+  try { _db.prepare('ALTER TABLE torneos ADD COLUMN campeon_override INTEGER DEFAULT NULL').run(); } catch (_) {}
   try {
     _db.prepare(`
       CREATE TABLE IF NOT EXISTS invitaciones_equipo (

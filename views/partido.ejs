@@ -71,13 +71,14 @@
         <div class="panel-header"><span class="panel-title">Coordinar fecha</span></div>
         <div style="padding:16px">
           <% if (partido.coordinado) { %>
-          <div style="font-size:13px;color:var(--win);margin-bottom:12px">
+          <div style="font-size:13px;color:var(--win);margin-bottom:8px">
             <i class="fas fa-calendar-check" style="margin-right:6px"></i>
-            Acordado: <strong><%= new Date(partido.coordinado).toLocaleString('es-UY') %></strong>
+            Acordado: <strong id="fecha-coordinada"></strong>
           </div>
           <% } else { %>
           <div style="font-size:12px;color:var(--dim);margin-bottom:12px">Sin fecha coordinada aún.</div>
           <% } %>
+          <div style="font-size:11px;color:var(--dim);margin-bottom:12px">*Las horas están en formato 24:00 y ajustadas automáticamente a tu zona horaria*</div>
           <div style="display:flex;gap:10px;align-items:flex-end">
             <div style="flex:1">
               <label style="font-size:11px;color:var(--dim);display:block;margin-bottom:6px">Nueva fecha y hora</label>
@@ -180,11 +181,43 @@
         </div>
       </form>
 
+      <% if (partido.estado === 'finalizado') { %>
+      <div class="panel" style="margin-top:20px">
+        <div class="panel-header"><span class="panel-title">Compartir resultado</span></div>
+        <div style="padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="font-size:12px;color:var(--muted)">Descargá la tarjeta con el marcador para compartirla.</div>
+          <a href="/partido/<%= partido.id %>/tarjeta.png" target="_blank" rel="noopener"
+             style="font-size:12px;color:var(--gold);border:0.5px solid rgba(232,200,122,0.3);padding:8px 14px;border-radius:6px;text-decoration:none;white-space:nowrap">
+            <i class="fas fa-image" style="margin-right:6px"></i>Ver tarjeta
+          </a>
+        </div>
+      </div>
+      <% } %>
+
     </div>
   </main>
 </div>
 
-<script>
+<script>const fechaCoordinadaIso = '<%= partido.coordinado ? partido.coordinado.replace(/\s+/, "T") : "" %>';
+
+function formatearFechaLocal(iso) {
+  if (!iso) return 'Sin fecha coordinada aún.';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return 'Fecha inválida';
+  return new Intl.DateTimeFormat('es-UY', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(date);
+}
+
+const elFechaCoordinada = document.getElementById('fecha-coordinada');
+if (elFechaCoordinada && fechaCoordinadaIso) {
+  elFechaCoordinada.textContent = formatearFechaLocal(fechaCoordinadaIso);
+}
 // ── Draft de civs ─────────────────────────────────────────────────────────────
 let civDraftVerificado = !!(<%- JSON.stringify(partido.draftcivs || '').replace(/</g, '\\u003c') %>.trim());
 

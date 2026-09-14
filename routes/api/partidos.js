@@ -235,26 +235,16 @@ router.post('/coordinar', requireAuth, (req, res) => {
     const chCoord = process.env.DISCORD_COORDINADOS_CHANNEL;
     if (chCoord && req.app.locals.notifyDiscord) {
       const [datePart, timePart] = fechaParaGuardar.split('T');
-      const [year, month, day] = datePart.split('-').map(Number);
-      const [hour, minute] = timePart.split(':').map(Number);
-      const fechaObj = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
-      const fechaFormateada = new Intl.DateTimeFormat('es-UY', {
-        timeZone: 'UTC',
-        weekday: 'long',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      }).format(fechaObj);
+      const fechaObj = new Date(`${datePart}T${timePart}:00`);
+      const unixEpoch = Math.floor(fechaObj.getTime() / 1000);
+      const horarioNota = '*Las horas están en formato 24:00 y ajustadas automáticamente a tu zona horaria*';
       const embed = new EmbedBuilder()
         .setTitle('Partido coordinado')
         .setColor('#22c55e')
-        .setDescription(`**${partido.j1_nombre}** vs **${partido.j2_nombre}**`)
+        .setDescription(`**${partido.j1_nombre}** vs **${partido.j2_nombre}**\n\n${horarioNota}`)
         .addFields(
           { name: 'Torneo', value: partido.torneo_nombre || '—', inline: true },
-          { name: 'Fecha y hora', value: fechaFormateada, inline: true }
+          { name: 'Fecha y hora', value: `<t:${unixEpoch}:F>`, inline: true }
         )
         .setTimestamp();
       req.app.locals.notifyDiscord(chCoord, { embeds: [embed] });

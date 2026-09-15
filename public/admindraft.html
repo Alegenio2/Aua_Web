@@ -535,9 +535,11 @@ async function fetchAndSaveDraftData() {
         const neutralCivs = [];
 
         data.events.forEach(event => {
-            if (!event.chosenOptionId || (event.player === 'NONE' && !event.actionType)) return;
-            const civ = { name: event.chosenOptionId, player: event.player, actionType: event.actionType, won: false, lost: false };
-            if (event.player === 'NONE') neutralCivs.push(civ);
+            const actionType = String(event.actionType || '').toLowerCase();
+            const player = String(event.player || '').toUpperCase();
+            if (!event.chosenOptionId || (player === 'NONE' && !actionType)) return;
+            const civ = { name: event.chosenOptionId, player, actionType, won: false, lost: false };
+            if (player === 'NONE') neutralCivs.push(civ);
             else civsData.push(civ);
         });
 

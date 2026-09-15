@@ -383,6 +383,9 @@ function render() {
     // ── civsData: picks y bans de HOST y GUEST ────────────────────────────────
     const civsRaw  = getCivsData();
     const civsList = Array.isArray(civsRaw) ? civsRaw : [];
+    const snipedCivs = new Set(civsList
+        .filter(civ => civ.actionType === 'snipe')
+        .map(civ => `${civ.player}:${civ.name}`));
 
     civsList.forEach(civ => {
         // civsData puede tener NONE también (bans globales del draft más viejo)
@@ -401,6 +404,7 @@ function render() {
             }
         } else if (player === 'HOST') {
             if (civ.actionType === 'pick') {
+                if (snipedCivs.has(`${civ.player}:${civ.name}`)) return;
                 civContainers.hostPicks.appendChild(buildCivCard(civ, 'civ-pick-host'));
             } else if (civ.actionType === 'snipe') {
                 civContainers.hostBans.appendChild(buildCivCard(civ, 'civ-snipe'));
@@ -409,6 +413,7 @@ function render() {
             }
         } else if (player === 'GUEST') {
             if (civ.actionType === 'pick') {
+                if (snipedCivs.has(`${civ.player}:${civ.name}`)) return;
                 civContainers.guestPicks.appendChild(buildCivCard(civ, 'civ-pick-guest'));
             } else if (civ.actionType === 'snipe') {
                 civContainers.guestBans.appendChild(buildCivCard(civ, 'civ-snipe'));

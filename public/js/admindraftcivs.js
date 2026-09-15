@@ -26,24 +26,25 @@ document.getElementById("guestName").textContent = guestName;
 
 
     data.events.forEach((event) => {
+      const actionType = String(event.actionType || '').toLowerCase();
+      const player = String(event.player || '').toUpperCase();
       // Validar que no esté vacío 'chosenOptionId' y que 'actionType' sea relevante
       if (
         !event.chosenOptionId ||
-        (event.player === "NONE" && !event.actionType)
+        (player === "NONE" && !actionType)
       ) {
         return; // Ignorar civilizaciones sin nombre o con 'NONE' sin actionType
       }
 
       const civ = {
         name: event.chosenOptionId,
-        player: event.player,
-        actionType: event.actionType,
+        player,
+        actionType,
         won: false,
         lost: false,
       };
       if (
-        event.player === "NONE" ||
-        (event.player === "NONE" && !event.actionType)
+        player === "NONE"
       ) {
         neutralCivs.push(civ); // Guardar civilizaciones neutrales por separado
       } else {

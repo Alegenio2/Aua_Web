@@ -10,7 +10,7 @@ async function fetchAndSaveMapData() {
         const response = await fetch(`https://aoe2cm.net/api/draft/${mapDraftCode}`);
         const mapdata = await response.json();
 
-        const mapasData = mapdata.events.map(event => {
+        const mapasData = mapdata.events.filter(event => event.chosenOptionId).map(event => {
             const mapOption = mapdata.preset.draftOptions.find(option => option.id === event.chosenOptionId);
 
             const rawImageUrl = mapOption?.imageUrls?.emblem || '';
@@ -21,8 +21,8 @@ async function fetchAndSaveMapData() {
             return {
                 name: mapOption ? mapOption.name : event.chosenOptionId,
                 imageUrl: finalImageUrl,
-                player: event.player,
-                actionType: event.actionType,
+                player: String(event.player || '').toUpperCase(),
+                actionType: String(event.actionType || '').toLowerCase(),
                 won: false,
                 lost: false
             };

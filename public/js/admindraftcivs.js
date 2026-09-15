@@ -84,9 +84,9 @@ function renderCivs() {
   const civsData = JSON.parse(localStorage.getItem("civsData")) || [];
 
   // 🔸 Primero, obtener los nombres de las civs que fueron snipeadas
-  const snipedCivs = civsData
+  const snipedCivs = new Set(civsData
     .filter((c) => c.actionType === "snipe")
-    .map((c) => c.name);
+    .map((c) => `${c.name}:${c.player === "HOST" ? "GUEST" : "HOST"}`));
 
   civsData.forEach((civ) => {
     if (civ.player === "NONE") return;
@@ -99,7 +99,7 @@ function renderCivs() {
       column = civ.player === "HOST" ? hostBansColumn : guestBansColumn;
     } else if (civ.actionType === "pick") {
       // 🔸 Saltar si fue snipeada
-      if (snipedCivs.includes(civ.name)) return;
+      if (snipedCivs.has(`${civ.name}:${civ.player}`)) return;
 
       column = civ.player === "HOST" ? hostPicksColumn : guestPicksColumn;
     } else {

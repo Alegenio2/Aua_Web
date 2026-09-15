@@ -143,9 +143,13 @@ html, body {
 .mbadge-host  { color:var(--host);  background:rgba(20,60,120,.7); }
 .mbadge-guest { color:var(--guest); background:rgba(120,20,60,.7); }
 .mbadge-ban   { color:#e07070; background:rgba(120,20,20,.7); }
+.mbadge-snipe { color:#e6c56a; background:rgba(120,90,20,.75); }
 
 .map-ban .map-img  { filter:grayscale(80%) sepia(30%); opacity:.3; }
 .map-ban .map-name { color:#886666; }
+.map-snipe { border-color:#c8a040 !important; }
+.map-snipe .map-img { filter:sepia(35%); opacity:.45; }
+.map-snipe .map-name { color:#c8a040; }
 .map-ban-neutral { border-color:rgba(160,40,40,.4) !important; }
 
 .maps-flex { display:flex; flex-wrap:wrap; gap:7px; }
@@ -385,7 +389,7 @@ function render() {
     const civsList = Array.isArray(civsRaw) ? civsRaw : [];
     const snipedCivs = new Set(civsList
         .filter(civ => civ.actionType === 'snipe')
-        .map(civ => civ.name));
+        .map(civ => `${civ.name}:${civ.player === 'HOST' ? 'GUEST' : 'HOST'}`));
 
     civsList.forEach(civ => {
         // civsData puede tener NONE también (bans globales del draft más viejo)
@@ -404,7 +408,7 @@ function render() {
             }
         } else if (player === 'HOST') {
             if (civ.actionType === 'pick') {
-                if (snipedCivs.has(civ.name)) return;
+                if (snipedCivs.has(`${civ.name}:${civ.player}`)) return;
                 civContainers.hostPicks.appendChild(buildCivCard(civ, 'civ-pick-host'));
             } else if (civ.actionType === 'snipe') {
                 civContainers.hostBans.appendChild(buildCivCard(civ, 'civ-snipe'));
@@ -413,7 +417,7 @@ function render() {
             }
         } else if (player === 'GUEST') {
             if (civ.actionType === 'pick') {
-                if (snipedCivs.has(civ.name)) return;
+                if (snipedCivs.has(`${civ.name}:${civ.player}`)) return;
                 civContainers.guestPicks.appendChild(buildCivCard(civ, 'civ-pick-guest'));
             } else if (civ.actionType === 'snipe') {
                 civContainers.guestBans.appendChild(buildCivCard(civ, 'civ-snipe'));
@@ -430,31 +434,36 @@ function render() {
 
     const mapsList = getMapasData();
     if (!Array.isArray(mapsList)) return;
+    const snipedMaps = new Set(mapsList
+        .filter(map => map.actionType === 'snipe')
+        .map(map => `${map.name}:${map.player === 'HOST' ? 'GUEST' : 'HOST'}`));
 
     mapsList.forEach(map => {
+        if (map.actionType === 'pick' && snipedMaps.has(`${map.name}:${map.player}`)) return;
         const player = resolvePlayer(map.player, ms);
         const isBan  = map.actionType === 'ban';
+        const isSnipe = map.actionType === 'snipe';
 
         if (player === 'NONE') {
             // Mapa neutral: bans van al centro con badge BAN
             const card = buildMapCard(map,
-                isBan ? 'mbadge-ban' : '',
-                isBan ? 'BAN' : '',
-                isBan ? 'map-ban map-ban-neutral' : ''
+                isSnipe ? 'mbadge-snipe' : isBan ? 'mbadge-ban' : '',
+                isSnipe ? 'SNIPE' : isBan ? 'BAN' : '',
+                isSnipe ? 'map-snipe' : isBan ? 'map-ban map-ban-neutral' : ''
             );
             document.getElementById('ov-neutral-maps').appendChild(card);
         } else if (player === 'HOST') {
             const card = buildMapCard(map,
-                isBan ? 'mbadge-ban' : 'mbadge-host',
-                isBan ? 'BAN' : nombres.mapHost,
-                isBan ? 'map-ban' : ''
+                isSnipe ? 'mbadge-snipe' : isBan ? 'mbadge-ban' : 'mbadge-host',
+                isSnipe ? 'SNIPE' : isBan ? 'BAN' : nombres.mapHost,
+                isSnipe ? 'map-snipe' : isBan ? 'map-ban' : ''
             );
             document.getElementById('ov-host-maps').appendChild(card);
         } else if (player === 'GUEST') {
             const card = buildMapCard(map,
-                isBan ? 'mbadge-ban' : 'mbadge-guest',
-                isBan ? 'BAN' : nombres.mapGuest,
-                isBan ? 'map-ban' : ''
+                isSnipe ? 'mbadge-snipe' : isBan ? 'mbadge-ban' : 'mbadge-guest',
+                isSnipe ? 'SNIPE' : isBan ? 'BAN' : nombres.mapGuest,
+                isSnipe ? 'map-snipe' : isBan ? 'map-ban' : ''
             );
             document.getElementById('ov-guest-maps').appendChild(card);
         }

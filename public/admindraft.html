@@ -568,7 +568,9 @@ function renderCivs() {
     Object.values(cols).forEach(c => c.innerHTML = '');
 
     const civsData   = JSON.parse(localStorage.getItem('civsData') || '[]');
-    const snipedCivs = civsData.filter(c => c.actionType === 'snipe').map(c => c.name);
+    const snipedCivs = new Set(civsData
+        .filter(c => c.actionType === 'snipe')
+        .map(c => `${c.name}:${c.player === 'HOST' ? 'GUEST' : 'HOST'}`));
 
     civsData.forEach(civ => {
         if (civ.player === 'NONE') return;
@@ -576,7 +578,7 @@ function renderCivs() {
         if      (civ.actionType === 'snipe') col = civ.player === 'HOST' ? cols.hostSnipes  : cols.guestSnipes;
         else if (civ.actionType === 'ban')   col = civ.player === 'HOST' ? cols.hostBans    : cols.guestBans;
         else if (civ.actionType === 'pick') {
-            if (snipedCivs.includes(civ.name)) return;
+            if (snipedCivs.has(`${civ.name}:${civ.player}`)) return;
             col = civ.player === 'HOST' ? cols.hostPicks : cols.guestPicks;
         } else return;
 
@@ -631,14 +633,14 @@ async function fetchAndSaveMapData() {
         const response = await fetch('https://aoe2cm.net/api/draft/' + mapDraftCode);
         const mapdata  = await response.json();
 
-        const mapasData = mapdata.events.map(event => {
+        const mapasData = mapdata.events.filter(event => event.chosenOptionId).map(event => {
             const opt = mapdata.preset.draftOptions.find(o => o.id === event.chosenOptionId);
             const rawUrl = opt?.imageUrls?.emblem || '';
             return {
                 name:       opt ? opt.name : event.chosenOptionId,
                 imageUrl:   rawUrl.startsWith('http') ? rawUrl : 'https://aoe2cm.net' + rawUrl,
-                player:     event.player,
-                actionType: event.actionType,
+                player:     String(event.player || '').toUpperCase(),
+                actionType: String(event.actionType || '').toLowerCase(),
                 won:  false,
                 lost: false
             };
@@ -662,9 +664,13 @@ function renderMaps() {
     hostMaps.innerHTML = guestMaps.innerHTML = neutralMaps.innerHTML = '';
 
     const mapasData = JSON.parse(localStorage.getItem('mapasData') || '[]');
+    const snipedMaps = new Set(mapasData
+        .filter(map => map.actionType === 'snipe')
+        .map(map => `${map.name}:${map.player === 'HOST' ? 'GUEST' : 'HOST'}`));
     mapasData.forEach(map => {
+        if (map.actionType === 'pick' && snipedMaps.has(`${map.name}:${map.player}`)) return;
         const el = document.createElement('div');
-        el.className = 'map-card' + (map.actionType === 'ban' ? ' map-ban' : '');
+        el.className = 'map-card' + (map.actionType === 'ban' || map.actionType === 'snipe' ? ' map-ban' : '');
         el.innerHTML = '<img src="' + map.imageUrl + '" alt="' + map.name + '" class="map-img"><span class="map-name">' + map.name + '</span><div class="map-buttons"><button onclick="markWin(\'' + map.name + '\')">Ⓐ</button><button onclick="markLoss(\'' + map.name + '\')">Ⓑ</button></div>';
         if      (map.player === 'HOST')  hostMaps.appendChild(el);
         else if (map.player === 'GUEST') guestMaps.appendChild(el);
